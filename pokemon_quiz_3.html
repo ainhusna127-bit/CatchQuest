@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CatchQuest</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;image-rendering:pixelated}
+html,body{width:100%;height:100%;overflow:hidden;background:#1a0a2e;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif}
+#app{width:420px;height:720px;position:relative;overflow:hidden;border-radius:0;
+  box-shadow:0 0 0 4px #FFD700,0 0 0 6px #7a5900,0 20px 60px rgba(0,0,0,0.9)}
+.screen{position:absolute;inset:0;display:none;flex-direction:column}
+.screen.active{display:flex}
+
+/* ===== PIXEL ART HELPERS ===== */
+/* Pixel sky background */
+.pixel-sky{
+  position:absolute;inset:0;
+  background:#87CEEB;
+  image-rendering:pixelated;
+}
+/* pixel clouds */
+.pixel-cloud{position:absolute;image-rendering:pixelated}
+
+/* ===== TITLE ===== */
+#s-title{
+  align-items:center;justify-content:center;gap:0;
+  overflow:hidden;
+  background:#87CEEB;
+}
+.title-bg-full{
+  position:absolute;inset:0;
+  background:#87CEEB;
+}
+
+/* pixel art scene for title */
+.title-scene{position:absolute;bottom:0;left:0;right:0;top:0;pointer-events:none}
+
+.gtitle{font-family:'Press Start 2P',monospace;font-size:11px;color:#FFD700;text-align:center;line-height:2.2;
+  text-shadow:3px 3px 0 #7a5900,-1px -1px 0 #7a5900,1px -1px 0 #7a5900,-1px 1px 0 #7a5900;
+  z-index:10;margin-bottom:4px;position:relative;
+  background:rgba(0,0,80,0.7);padding:12px 16px;border-radius:0;
+  border:3px solid #FFD700;image-rendering:pixelated;}
+.gtitle span{color:#FF6B6B}
+.tsub{font-size:8px;color:#fff;letter-spacing:2px;text-transform:uppercase;z-index:10;margin-bottom:20px;position:relative;
+  background:rgba(0,0,50,0.6);padding:6px 14px;font-family:'Press Start 2P',monospace}
+.bwrap{display:flex;flex-direction:column;gap:8px;width:220px;z-index:10;position:relative}
+.btn{font-family:'Press Start 2P',monospace;font-size:8px;padding:12px 16px;cursor:pointer;
+  letter-spacing:.5px;border:3px solid;transition:all .1s;background:transparent;image-rendering:pixelated}
+.btn:active{transform:translate(2px,2px)}
+.btn-go{border-color:#FFD700;color:#FFD700;background:rgba(0,0,0,0.7)}
+.btn-go:hover{background:#FFD700;color:#1a1a1a}
+.btn-me{border-color:#64B5F6;color:#64B5F6;background:rgba(0,0,0,0.7)}
+.btn-me:hover{background:#64B5F6;color:#1a1a1a}
+.btn-gr{border-color:#81C784;color:#81C784;background:rgba(0,0,0,0.7)}
+.btn-gr:hover{background:#81C784;color:#1a1a1a}
+.btn-re{border-color:#EF9A9A;color:#EF9A9A;background:rgba(0,0,0,0.7)}
+.btn-re:hover{background:#EF9A9A;color:#1a1a1a}
+.btn-sm{font-size:7px;padding:9px 12px}
+
+/* title pikachu */
+.title-hero{width:110px;height:110px;animation:bounce 1s steps(2) infinite;z-index:10;margin-bottom:6px;
+  filter:drop-shadow(3px 3px 0 rgba(0,0,0,0.5))}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* ===== MAP ===== */
+#s-map{background:#87CEEB;flex-direction:column}
+.map-topbar{
+  display:flex;align-items:center;justify-content:space-between;padding:8px 12px;flex-shrink:0;
+  background:rgba(0,0,60,0.85);border-bottom:3px solid #FFD700;
+  font-family:'Press Start 2P',monospace;
+}
+.map-topbar-title{font-size:8px;color:#FFD700}
+.topbar-r{display:flex;gap:6px;align-items:center}
+.snd-btn{font-size:14px;cursor:pointer;opacity:.8;background:none;border:none;color:#fff}
+.snd-btn:hover{opacity:1}
+
+.map-scroll{flex:1;overflow-y:auto;overflow-x:hidden;position:relative}
+.map-scroll::-webkit-scrollbar{width:6px}
+.map-scroll::-webkit-scrollbar-thumb{background:#7a5900;border-radius:0;image-rendering:pixelated}
+.map-scroll::-webkit-scrollbar-track{background:#4a3000}
+
+/* THE PIXEL WORLD */
+.map-world{
+  position:relative;
+  width:420px;
+  height:1200px;
+  /* Pixel art layered background */
+  background:
+    /* ground stones at bottom */
+    repeating-linear-gradient(
+      180deg,
+      transparent 0px, transparent 980px,
+      #8B7355 980px, #8B7355 982px,
+      transparent 982px, transparent 1000px
+    ),
+    /* grass strip */
+    linear-gradient(180deg,
+      transparent 0px,
+      transparent 940px,
+      #4CAF50 940px, #5DBB63 955px,
+      #6FCF70 955px, #7AD47D 965px,
+      #8B7355 965px, #9E8765 985px,
+      #C4A97A 985px, #D4B98A 995px,
+      #C8A870 995px, #B89060 1010px,
+      #A07848 1010px, #907040 1020px,
+      #7a5900 1020px, #6a4900 1040px,
+      #8B7355 1040px, #C4A97A 1060px,
+      #B89060 1060px, #A07848 1100px,
+      #907040 1100px, #8B7355 1200px
+    ),
+    /* sky */
+    linear-gradient(180deg, #87CEEB 0%, #A8D8EA 50%, #B8E8F8 100%);
+  overflow:hidden;
+}
+
+/* Pixel clouds */
+.px-cloud{
+  position:absolute;
+  image-rendering:pixelated;
+  pointer-events:none;
+}
+
+/* Pixel trees */
+.px-tree{
+  position:absolute;
+  image-rendering:pixelated;
+  pointer-events:none;
+  font-size:0; /* use SVG only */
+}
+
+/* PATH */
+.path-svg{position:absolute;inset:0;width:420px;pointer-events:none;z-index:2;image-rendering:pixelated}
+
+/* NODE */
+.snode{
+  position:absolute;z-index:8;
+  cursor:pointer;
+  transform:translate(-50%,-50%);
+}
+.snode.locked{cursor:not-allowed}
+.snode-outer{
+  width:72px;height:72px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.snode-outer.is-current{animation:node-bounce 0.8s steps(2) infinite}
+@keyframes node-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.snode-border{
+  width:68px;height:68px;border-radius:50%;
+  border:4px solid;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  image-rendering:pixelated;
+  box-shadow:3px 3px 0 rgba(0,0,0,0.5);
+}
+.snode.locked .snode-border{filter:brightness(.35) grayscale(.9)}
+.snode.completed .snode-border{border-color:#81C784 !important;box-shadow:3px 3px 0 rgba(0,80,0,0.6)}
+.snode.current .snode-border{box-shadow:0 0 0 3px #FFD700, 3px 3px 0 rgba(0,0,0,0.5)}
+.snode-pk{width:48px;height:48px;image-rendering:pixelated}
+.snode-label{
+  position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);
+  background:rgba(0,0,60,0.92);
+  font-family:'Press Start 2P',monospace;font-size:6px;color:#FFD700;
+  padding:3px 7px;white-space:nowrap;
+  border:2px solid #7a5900;
+  box-shadow:2px 2px 0 rgba(0,0,0,0.5);
+  image-rendering:pixelated;
+}
+.snode.completed .snode-label{color:#81C784;border-color:#2d6a2d}
+.snode.locked .snode-label{color:#888;border-color:#444}
+.snode-stars{
+  position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+  display:flex;gap:1px;white-space:nowrap;
+}
+.star{font-size:10px;line-height:1;image-rendering:pixelated}
+.star.off{opacity:.2}
+/* lock badge */
+.lock-badge{
+  position:absolute;top:2px;right:2px;
+  background:rgba(0,0,0,0.75);border-radius:50%;
+  width:18px;height:18px;display:flex;align-items:center;justify-content:center;
+  font-size:10px;image-rendering:pixelated;
+}
+/* done badge */
+.done-badge{
+  position:absolute;top:0px;right:-2px;
+  background:#4CAF50;border-radius:50%;
+  width:20px;height:20px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;border:2px solid #fff;image-rendering:pixelated;
+  font-weight:900;color:#fff;
+}
+
+/* Player pin */
+.player-pin{
+  position:absolute;z-index:12;pointer-events:none;
+  transform:translate(-50%,-100%);
+  transition:all .5s ease;
+  text-align:center;
+  image-rendering:pixelated;
+}
+.player-pin svg{display:block;animation:sprite-walk 0.4s steps(2) infinite;filter:drop-shadow(2px 2px 0 rgba(0,0,0,0.6))}
+@keyframes sprite-walk{0%,100%{transform:scaleY(1)}50%{transform:scaleY(0.95)}}
+.player-pin-shadow{width:22px;height:6px;background:rgba(0,0,0,0.3);border-radius:50%;margin:0 auto}
+
+/* map footer */
+.map-footer{
+  background:rgba(0,0,60,0.9);padding:8px 12px;
+  display:flex;gap:8px;align-items:center;flex-shrink:0;
+  border-top:3px solid #7a5900;
+  font-family:'Press Start 2P',monospace;
+}
+.schip{background:#1a1a4a;border:2px solid #7a5900;padding:4px 10px;font-size:7px;color:#ccc;image-rendering:pixelated}
+.schip b{color:#FFD700}
+
+/* ===== BATTLE ===== */
+#s-battle{background:#050a14}
+.btl-bg{
+  position:absolute;inset:0;z-index:0;
+  /* pixel battle bg */
+  background:
+    linear-gradient(180deg,
+      #1a2a5a 0%, #243a7a 20%,
+      #1e5c3a 50%, #2a7a4a 60%,
+      #1e5c3a 65%, #3a8a2a 68%,
+      #4a9a3a 70%, #2d5a1a 72%,
+      #1a3a0a 100%);
+  image-rendering:pixelated;
+}
+/* pixel ground lines */
+.btl-bg::after{
+  content:'';position:absolute;left:0;right:0;top:60%;height:5px;
+  background:repeating-linear-gradient(90deg,#4a9a3a 0px,#4a9a3a 8px,#2d7a1a 8px,#2d7a1a 16px);
+}
+.btl-bg::before{
+  content:'';position:absolute;left:0;right:0;top:30%;height:5px;
+  background:repeating-linear-gradient(90deg,#243a7a 0px,#243a7a 8px,#1a2a5a 8px,#1a2a5a 16px);
+}
+.btl-content{position:relative;z-index:1;display:flex;flex-direction:column;height:100%}
+.btl-arena{flex:1;display:flex;align-items:flex-end;justify-content:space-between;padding:14px 24px 0;min-height:255px;position:relative}
+.bside{display:flex;flex-direction:column;align-items:flex-start;gap:8px;width:46%}
+.bside.enemy{align-items:flex-end}
+.hpbox{
+  background:rgba(0,0,30,0.9);border:3px solid #7a5900;padding:8px 12px;width:100%;
+  image-rendering:pixelated;
+}
+.hpname{font-family:'Press Start 2P',monospace;font-size:7px;color:#fff;margin-bottom:2px}
+.hplv{font-family:'Press Start 2P',monospace;font-size:6px;color:#8B949E;margin-bottom:5px}
+.hptrack{background:rgba(255,255,255,.08);height:10px;border:2px solid #555;overflow:hidden;image-rendering:pixelated}
+.hpfill{height:100%;transition:width .4s steps(4)}
+.hpnum{font-family:'Press Start 2P',monospace;font-size:6px;color:#8B949E;margin-top:3px;text-align:right}
+.hph{background:repeating-linear-gradient(90deg,#43A047 0px,#66BB6A 4px,#43A047 8px)}
+.hpm{background:repeating-linear-gradient(90deg,#F9A825 0px,#FFD54F 4px,#F9A825 8px)}
+.hpl{background:repeating-linear-gradient(90deg,#E53935 0px,#EF5350 4px,#E53935 8px)}
+.bsprite-wrap{margin-bottom:4px;image-rendering:pixelated}
+.bsprite-wrap.enemy{align-self:flex-end;animation:enemy-b 0.6s steps(2) infinite}
+.bsprite-wrap.player{align-self:flex-start;animation:player-b 0.6s steps(2) infinite;transform:scaleX(-1)}
+@keyframes enemy-b{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes player-b{0%,100%{transform:scaleX(-1) translateY(0)}50%{transform:scaleX(-1) translateY(-6px)}}
+.do-atk{animation:datk .2s steps(2) 3 !important}
+@keyframes datk{0%,100%{transform:scaleX(-1) translateX(0)}50%{transform:scaleX(-1) translateX(20px)}}
+.do-hurt{animation:dhurt .15s steps(2) 4 !important;filter:brightness(5) saturate(0) !important}
+@keyframes dhurt{0%,100%{transform:translateX(0)}50%{transform:translateX(-8px)}}
+.do-eatk{animation:deatk .2s steps(2) 3 !important}
+@keyframes deatk{0%,100%{transform:translateY(0)}50%{transform:translateY(10px)}}
+.do-phurt{animation:dphurt .15s steps(2) 4 !important;filter:brightness(5) saturate(0) !important}
+@keyframes dphurt{0%,100%{transform:scaleX(-1) translateX(0)}50%{transform:scaleX(-1) translateX(10px)}}
+.btl-vs{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Press Start 2P',monospace;font-size:14px;color:rgba(255,215,0,.15);pointer-events:none}
+.blog{
+  background:rgba(0,0,30,0.92);border-top:3px solid #7a5900;
+  padding:10px 16px;min-height:54px;font-family:'Press Start 2P',monospace;
+  font-size:7px;color:#E0E0E0;line-height:2;display:flex;align-items:center;
+  image-rendering:pixelated;
+}
+.bacts{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 10px;background:rgba(0,0,30,0.95);border-top:3px solid #7a5900;flex-shrink:0}
+.mvbtn{
+  background:rgba(0,0,60,.8);border:3px solid #555;color:#fff;
+  padding:8px;font-family:'Press Start 2P',monospace;font-size:7px;
+  cursor:pointer;transition:all .1s;display:flex;flex-direction:column;gap:3px;text-align:left;
+  image-rendering:pixelated;
+}
+.mvbtn:hover:not(:disabled){background:rgba(255,215,0,.15);border-color:#FFD700;color:#FFD700}
+.mvbtn:active:not(:disabled){transform:translate(2px,2px)}
+.mvbtn:disabled{opacity:.3;cursor:not-allowed}
+.mvpp{font-size:6px;color:#64B5F6}
+.mvtype{font-size:6px;padding:2px 6px;display:inline-block;margin-top:2px;font-weight:700;font-family:'Press Start 2P',monospace}
+.t-fire{background:#FF5722;color:#fff}.t-water{background:#2196F3;color:#fff}.t-grass{background:#4CAF50;color:#fff}
+.t-normal{background:#607D8B;color:#fff}.t-thunder{background:#FFD600;color:#1A1A2E}.t-ice{background:#80DEEA;color:#1A1A2E}
+.t-psychic{background:#E91E63;color:#fff}.t-dragon{background:#512DA8;color:#fff}.t-ghost{background:#4527A0;color:#fff}
+.quiz-panel{background:rgba(0,0,30,0.97);border-top:3px solid #7a5900;padding:6px 10px 0;flex-shrink:0}
+.quiz-jenis{font-family:'Press Start 2P',monospace;font-size:6px;text-align:center;padding:3px 0}
+.jenis-batang{color:#64B5F6;background:rgba(30,80,180,0.35);padding:3px 8px;display:inline-block;border:2px solid #1565C0}
+.jenis-eja{color:#CE93D8;background:rgba(100,30,180,0.35);padding:3px 8px;display:inline-block;border:2px solid #7B1FA2}
+.quiz-display{display:flex;align-items:center;justify-content:center;gap:6px;padding:6px 0 4px;flex-wrap:wrap;min-height:60px}
+.quiz-streak{font-family:'Press Start 2P',monospace;font-size:7px;color:#FF9800;text-align:center;padding:0 0 3px;min-height:16px}
+.quiz-pilihan{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px 0 6px}
+.suku-box{background:rgba(255,255,255,0.1);border:3px solid #7a5900;font-family:'Press Start 2P',monospace;font-size:13px;color:#fff;padding:7px 10px;min-width:46px;text-align:center;text-shadow:2px 2px 0 rgba(0,0,0,0.8)}
+.suku-box.highlight{border-color:#FFD700;color:#FFD700;background:rgba(255,215,0,0.1)}
+.suku-plus,.suku-dash{font-family:'Press Start 2P',monospace;font-size:13px;color:#FFD700;text-shadow:2px 2px 0 rgba(0,0,0,0.8)}
+.suku-eq{font-family:'Press Start 2P',monospace;font-size:13px;color:#fff;opacity:.4}
+.suku-blank{background:rgba(255,215,0,0.05);border:3px dashed #FFD700;font-family:'Press Start 2P',monospace;font-size:11px;color:#FFD700;padding:7px 10px;min-width:70px;text-align:center;animation:blink-border 1s steps(1) infinite}
+@keyframes blink-border{0%,100%{border-color:#FFD700}50%{border-color:rgba(255,215,0,.2)}}
+.huruf-box{background:rgba(255,255,255,0.08);border:3px solid #7a5900;font-family:'Press Start 2P',monospace;font-size:14px;color:#fff;width:34px;height:38px;display:flex;align-items:center;justify-content:center;text-shadow:2px 2px 0 rgba(0,0,0,0.8)}
+.huruf-sep{width:3px;height:28px;background:#FFD700;opacity:.4}
+.huruf-row{display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap}
+.pilihan-btn{background:rgba(0,0,80,.85);border:3px solid #444;color:#fff;padding:9px 4px;font-family:'Press Start 2P',monospace;font-size:8px;cursor:pointer;transition:all .1s;text-align:center;image-rendering:pixelated;letter-spacing:.5px;line-height:1.6}
+.pilihan-btn:hover:not(:disabled){background:rgba(255,215,0,.15);border-color:#FFD700;color:#FFD700;transform:translate(-1px,-1px)}
+.pilihan-btn:active:not(:disabled){transform:translate(2px,2px)}
+.pilihan-btn:disabled{cursor:not-allowed;opacity:.5}
+.pilihan-btn.betul{background:rgba(0,150,0,.75)!important;border-color:#4CAF50!important;color:#4CAF50!important}
+.pilihan-btn.salah{background:rgba(150,0,0,.75)!important;border-color:#E53935!important;color:#E53935!important}
+.quiz-gambar{width:88px;height:88px;filter:drop-shadow(1px 3px 6px rgba(0,0,0,.2));animation:bounce 0.8s steps(2) infinite;flex-shrink:0}
+.quiz-gambar-sm{width:56px;height:56px;filter:drop-shadow(1px 2px 4px rgba(0,0,0,.15));flex-shrink:0}
+.bbtns{display:flex;gap:6px;padding:0 10px 10px;background:rgba(0,0,30,.95);flex-shrink:0}
+
+/* ===== MENU ===== */
+#s-menu{
+  align-items:center;justify-content:center;gap:10px;padding:28px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='8' height='8' fill='%23101030'/%3E%3Crect x='8' y='8' width='8' height='8' fill='%23101030'/%3E%3Crect x='8' y='0' width='8' height='8' fill='%230a0a22'/%3E%3Crect x='0' y='8' width='8' height='8' fill='%230a0a22'/%3E%3C/svg%3E");
+}
+.mlogo{font-family:'Press Start 2P',monospace;font-size:10px;color:#FFD700;margin-bottom:8px;text-align:center;line-height:2;
+  background:rgba(0,0,0,.7);padding:10px;border:3px solid #FFD700}
+.mcard{background:rgba(0,0,30,0.9);border:3px solid #7a5900;padding:14px 20px;width:100%;max-width:280px;margin-bottom:6px;image-rendering:pixelated}
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-family:'Press Start 2P',monospace;font-size:7px;color:#8B949E;border-bottom:2px solid rgba(255,255,255,.08)}
+.mrow:last-child{border-bottom:none}
+.mrow b{color:#F0F6FC}
+
+/* ===== RESULT ===== */
+#s-result{
+  align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:24px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='8' height='8' fill='%23101030'/%3E%3Crect x='8' y='8' width='8' height='8' fill='%23101030'/%3E%3Crect x='8' y='0' width='8' height='8' fill='%230a0a22'/%3E%3Crect x='0' y='8' width='8' height='8' fill='%230a0a22'/%3E%3C/svg%3E");
+  text-align:center
+}
+.rsp{animation:bounce 1s steps(2) infinite;filter:drop-shadow(3px 3px 0 rgba(0,0,0,0.6))}
+.rtitle{font-family:'Press Start 2P',monospace;font-size:14px;line-height:1.8}
+.rmsg{font-family:'Press Start 2P',monospace;font-size:7px;color:#8B949E;max-width:300px;line-height:2.2}
+.rxp{font-family:'Press Start 2P',monospace;font-size:10px;color:#FFD700}
+.rbadge{background:rgba(0,0,30,.9);border:3px solid #FFD700;padding:10px 20px;font-family:'Press Start 2P',monospace;font-size:8px;color:#FFD700}
+.cfwrap{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cfp{position:absolute;font-size:16px;animation:cff 2.5s steps(8) forwards;opacity:0;image-rendering:pixelated}
+@keyframes cff{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(200px) rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- TITLE -->
+<div id="s-title" class="screen active">
+  <!-- Pixel sky + scene drawn by SVG -->
+  <svg style="position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated" viewBox="0 0 420 720" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+    <!-- SKY -->
+    <rect width="420" height="720" fill="#87CEEB"/>
+    <!-- clouds pixel -->
+    <rect x="30" y="40" width="64" height="16" fill="#fff" opacity=".9"/>
+    <rect x="22" y="48" width="80" height="24" fill="#fff" opacity=".9"/>
+    <rect x="14" y="56" width="96" height="16" fill="#fff" opacity=".85"/>
+    <rect x="280" y="60" width="48" height="12" fill="#fff" opacity=".9"/>
+    <rect x="272" y="68" width="64" height="20" fill="#fff" opacity=".9"/>
+    <rect x="264" y="76" width="80" height="12" fill="#fff" opacity=".85"/>
+    <rect x="150" y="30" width="40" height="10" fill="#fff" opacity=".7"/>
+    <rect x="144" y="36" width="52" height="16" fill="#fff" opacity=".7"/>
+    <!-- left big pixel tree -->
+    <rect x="0" y="180" width="80" height="300" fill="#5D4037"/>
+    <rect x="8" y="172" width="64" height="8" fill="#6D4C41"/>
+    <!-- tree top cluster -->
+    <rect x="0" y="80" width="96" height="32" fill="#2E7D32"/>
+    <rect x="8" y="64" width="80" height="24" fill="#388E3C"/>
+    <rect x="16" y="48" width="72" height="24" fill="#43A047"/>
+    <rect x="24" y="40" width="64" height="16" fill="#4CAF50"/>
+    <rect x="32" y="32" width="56" height="16" fill="#66BB6A"/>
+    <rect x="40" y="24" width="48" height="16" fill="#81C784"/>
+    <rect x="48" y="16" width="32" height="16" fill="#66BB6A"/>
+    <rect x="56" y="8" width="24" height="16" fill="#4CAF50"/>
+    <!-- dark outlines tree left -->
+    <rect x="0" y="80" width="8" height="112" fill="#1B5E20"/>
+    <rect x="88" y="80" width="8" height="112" fill="#1B5E20"/>
+    <!-- right pixel bush/tree -->
+    <rect x="340" y="220" width="80" height="260" fill="#4E342E"/>
+    <rect x="348" y="212" width="72" height="8" fill="#5D4037"/>
+    <rect x="320" y="100" width="100" height="32" fill="#1B5E20"/>
+    <rect x="328" y="80" width="92" height="28" fill="#2E7D32"/>
+    <rect x="336" y="56" width="84" height="32" fill="#388E3C"/>
+    <rect x="344" y="40" width="76" height="24" fill="#43A047"/>
+    <rect x="352" y="28" width="68" height="20" fill="#4CAF50"/>
+    <rect x="360" y="16" width="60" height="20" fill="#66BB6A"/>
+    <rect x="368" y="8" width="52" height="16" fill="#81C784"/>
+    <rect x="376" y="0" width="44" height="16" fill="#66BB6A"/>
+    <!-- small bush right -->
+    <rect x="300" y="460" width="60" height="40" fill="#2E7D32"/>
+    <rect x="308" y="448" width="52" height="16" fill="#388E3C"/>
+    <rect x="316" y="440" width="44" height="16" fill="#4CAF50"/>
+    <!-- pink flower on right bush -->
+    <rect x="360" y="320" width="8" height="8" fill="#E91E63"/>
+    <rect x="352" y="328" width="8" height="8" fill="#FF80AB"/>
+    <!-- rocks left -->
+    <rect x="0" y="460" width="24" height="40" fill="#78909C"/>
+    <rect x="8" y="452" width="32" height="12" fill="#90A4AE"/>
+    <rect x="16" y="444" width="24" height="12" fill="#B0BEC5"/>
+    <rect x="0" y="440" width="16" height="16" fill="#78909C"/>
+    <!-- sign post -->
+    <rect x="110" y="468" width="8" height="56" fill="#8D6E63"/>
+    <rect x="106" y="464" width="16" height="4" fill="#6D4C41"/>
+    <rect x="88" y="432" width="56" height="40" fill="#A1887F"/>
+    <rect x="92" y="436" width="48" height="32" fill="#BCAAA4"/>
+    <rect x="96" y="440" width="40" height="4" fill="#8D6E63" opacity=".5"/>
+    <rect x="96" y="448" width="40" height="4" fill="#8D6E63" opacity=".5"/>
+    <rect x="96" y="456" width="32" height="4" fill="#8D6E63" opacity=".5"/>
+    <!-- GROUND -->
+    <rect x="0" y="500" width="420" height="12" fill="#4CAF50"/>
+    <rect x="0" y="512" width="420" height="8" fill="#388E3C"/>
+    <rect x="0" y="520" width="420" height="200" fill="#6D4C41"/>
+    <!-- pixel stones ground -->
+    <rect x="0" y="520" width="420" height="16" fill="#8D6E63"/>
+    <!-- individual stones -->
+    <rect x="4" y="520" width="36" height="18" rx="0" fill="#C4A97A"/><rect x="44" y="522" width="32" height="16" fill="#B89060"/>
+    <rect x="80" y="520" width="40" height="18" fill="#D4B98A"/><rect x="124" y="521" width="34" height="17" fill="#C8A870"/>
+    <rect x="162" y="520" width="38" height="18" fill="#B89060"/><rect x="204" y="522" width="36" height="16" fill="#C4A97A"/>
+    <rect x="244" y="520" width="42" height="18" fill="#D4B98A"/><rect x="290" y="521" width="34" height="17" fill="#C8A870"/>
+    <rect x="328" y="520" width="40" height="18" fill="#B89060"/><rect x="372" y="520" width="44" height="18" fill="#C4A97A"/>
+    <!-- stone outlines -->
+    <rect x="4" y="520" width="36" height="2" fill="#A07848"/><rect x="44" y="522" width="32" height="2" fill="#907040"/>
+    <rect x="80" y="520" width="40" height="2" fill="#A07848"/><rect x="124" y="521" width="34" height="2" fill="#907040"/>
+    <rect x="162" y="520" width="38" height="2" fill="#907040"/><rect x="204" y="522" width="36" height="2" fill="#A07848"/>
+    <rect x="244" y="520" width="42" height="2" fill="#A07848"/><rect x="290" y="521" width="34" height="2" fill="#907040"/>
+    <rect x="328" y="520" width="40" height="2" fill="#A07848"/><rect x="372" y="520" width="44" height="2" fill="#907040"/>
+    <!-- 2nd row stones -->
+    <rect x="20" y="538" width="40" height="18" fill="#C4A97A"/><rect x="64" y="540" width="36" height="16" fill="#B89060"/>
+    <rect x="104" y="538" width="44" height="18" fill="#D4B98A"/><rect x="152" y="539" width="38" height="17" fill="#C8A870"/>
+    <rect x="194" y="538" width="40" height="18" fill="#B89060"/><rect x="238" y="540" width="42" height="16" fill="#C4A97A"/>
+    <rect x="284" y="538" width="38" height="18" fill="#D4B98A"/><rect x="326" y="539" width="44" height="17" fill="#C8A870"/>
+    <rect x="374" y="538" width="46" height="18" fill="#B89060"/>
+    <!-- grass tufts on ground -->
+    <rect x="10" y="510" width="8" height="12" fill="#4CAF50"/><rect x="14" y="506" width="4" height="6" fill="#66BB6A"/>
+    <rect x="50" y="512" width="6" height="10" fill="#4CAF50"/><rect x="53" y="508" width="4" height="6" fill="#66BB6A"/>
+    <rect x="100" y="510" width="8" height="12" fill="#388E3C"/><rect x="104" y="506" width="4" height="6" fill="#4CAF50"/>
+    <rect x="160" y="511" width="6" height="10" fill="#4CAF50"/><rect x="200" y="510" width="8" height="12" fill="#388E3C"/>
+    <rect x="260" y="512" width="6" height="10" fill="#4CAF50"/><rect x="310" y="510" width="8" height="12" fill="#388E3C"/>
+    <rect x="370" y="511" width="6" height="10" fill="#4CAF50"/>
+  </svg>
+
+  <svg class="title-hero" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="50" cy="58" rx="28" ry="24" fill="#FFD700"/>
+    <polygon points="30,32 22,6 39,26" fill="#111"/><polygon points="32,30 25,10 37,26" fill="#FFD700"/>
+    <polygon points="70,32 78,6 61,26" fill="#111"/><polygon points="68,30 75,10 63,26" fill="#FFD700"/>
+    <ellipse cx="50" cy="67" rx="20" ry="13" fill="#F9A825" opacity=".5"/>
+    <circle cx="41" cy="48" r="4.5" fill="#111"/><circle cx="59" cy="48" r="4.5" fill="#111"/>
+    <circle cx="40" cy="47" r="1.5" fill="#fff"/><circle cx="58" cy="47" r="1.5" fill="#fff"/>
+    <ellipse cx="50" cy="53" rx="2" ry="1.5" fill="#111"/>
+    <path d="M45,57 Q50,62 55,57" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="34" cy="56" rx="7" ry="5" fill="#FF5252" opacity=".9"/>
+    <ellipse cx="66" cy="56" rx="7" ry="5" fill="#FF5252" opacity=".9"/>
+    <polygon points="74,68 88,56 82,76 92,71 80,86 72,78" fill="#FFD700" stroke="#F9A825" stroke-width="1"/>
+    <polygon points="74,68 88,56 82,76" fill="#111"/>
+    <ellipse cx="28" cy="65" rx="6" ry="4.5" fill="#FFD700" transform="rotate(-20,28,65)"/>
+    <ellipse cx="72" cy="65" rx="6" ry="4.5" fill="#FFD700" transform="rotate(20,72,65)"/>
+    <ellipse cx="40" cy="78" rx="8" ry="4.5" fill="#F9A825"/><ellipse cx="60" cy="78" rx="8" ry="4.5" fill="#F9A825"/>
+  </svg>
+  <div class="gtitle">CatchQuest</div>
+  <div class="tsub">Tangkap · Lawan · Menang</div>
+  <div class="bwrap">
+    <button class="btn btn-gr" onclick="go('s-map');sfxMenu()">▶ MULA PERMAINAN</button>
+    <button class="btn btn-me" onclick="go('s-menu');sfxMenu()">☰ MENU</button>
+    <button class="btn btn-go" id="snd-title" onclick="toggleSound()">🔊 BUNYI : HIDUP</button>
+  </div>
+</div>
+
+<!-- MENU -->
+<div id="s-menu" class="screen">
+  <div class="mlogo">☰ MENU UTAMA</div>
+  <div class="mcard">
+    <div class="mrow"><span>Jurulatih</span><b>Penjelajah</b></div>
+    <div class="mrow"><span>Tahap Semasa</span><b id="m-stg">1 / 10</b></div>
+    <div class="mrow"><span>XP Terkumpul</span><b id="m-xp">0</b></div>
+    <div class="mrow"><span>Pokemon Ditangkap</span><b id="m-caught">0</b></div>
+    <div class="mrow"><span>Status Bunyi</span><b id="m-snd">HIDUP</b></div>
+  </div>
+  <div class="bwrap">
+    <button class="btn btn-gr" onclick="go('s-map');sfxMenu()">▶ TERUSKAN</button>
+    <button class="btn btn-go" onclick="toggleSound()">🔊 TOGGLE BUNYI</button>
+    <button class="btn btn-re" onclick="resetGame()">↺ MULA SEMULA</button>
+    <button class="btn btn-sm btn-me" onclick="go('s-title');sfxMenu()">← KEMBALI</button>
+  </div>
+</div>
+
+<!-- MAP -->
+<div id="s-map" class="screen">
+  <div class="map-topbar">
+    <div class="map-topbar-title">🗺 PETA DUNIA</div>
+    <div class="topbar-r">
+      <button class="snd-btn" id="snd-map" onclick="toggleSound()">🔊</button>
+      <button class="btn btn-sm btn-me" onclick="go('s-menu');sfxMenu()">☰ MENU</button>
+      <button class="btn btn-sm" onclick="go('s-title');sfxMenu()" style="border-color:#8B949E;color:#8B949E">← BALIK</button>
+    </div>
+  </div>
+  <div class="map-scroll" id="map-scroll">
+    <div class="map-world" id="map-world">
+      <svg id="world-bg-svg" style="position:absolute;inset:0;width:420px;height:1200px;image-rendering:pixelated;z-index:0" viewBox="0 0 420 1200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"></svg>
+      <svg class="path-svg" id="path-svg" style="height:1200px"></svg>
+      <div class="player-pin" id="player-pin">
+        <svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated">
+          <!-- pixel trainer -->
+          <rect x="12" y="2" width="8" height="8" fill="#FFCC80"/>
+          <rect x="10" y="4" width="12" height="6" fill="#FFCC80"/>
+          <rect x="12" y="2" width="8" height="3" fill="#1565C0"/>
+          <rect x="10" y="10" width="12" height="14" fill="#E53935"/>
+          <rect x="8" y="12" width="4" height="10" fill="#FFCC80"/>
+          <rect x="20" y="12" width="4" height="10" fill="#FFCC80"/>
+          <rect x="10" y="24" width="5" height="10" fill="#1565C0"/>
+          <rect x="17" y="24" width="5" height="10" fill="#1565C0"/>
+          <rect x="10" y="33" width="5" height="5" fill="#333"/>
+          <rect x="17" y="33" width="5" height="5" fill="#333"/>
+        </svg>
+        <div class="player-pin-shadow"></div>
+      </div>
+    </div>
+  </div>
+  <div class="map-footer">
+    <div class="schip">XP <b id="f-xp">0</b></div>
+    <div class="schip">LV <b id="f-stg">1/10</b></div>
+    <div class="schip">🎯 <b id="f-caught">0</b></div>
+    <div style="margin-left:auto;font-size:6px;color:rgba(255,255,255,.3);font-family:'Press Start 2P',monospace">KETIK NODE!</div>
+  </div>
+</div>
+
+<!-- BATTLE -->
+<div id="s-battle" class="screen">
+  <div class="btl-bg"></div>
+  <div class="btl-content">
+    <div class="btl-arena" id="btl-arena"></div>
+    <div class="blog" id="blog">Pertarungan bermula!</div>
+    <div class="quiz-panel" id="quiz-panel">
+      <div class="quiz-jenis" id="quiz-jenis"></div>
+      <div class="quiz-display" id="quiz-display"></div>
+      <div class="quiz-streak" id="quiz-streak"></div>
+      <div class="quiz-pilihan" id="quiz-pilihan"></div>
+    </div>
+    <div class="bbtns">
+      <button class="btn btn-sm btn-re" style="flex:1" onclick="flee()">🏃 LARI</button>
+      <button class="btn btn-sm btn-me" style="flex:1" onclick="go('s-menu')">☰ MENU</button>
+    </div>
+  </div>
+</div>
+
+<!-- TAHNIAH SCREEN -->
+<div id="s-tahniah" class="screen" style="align-items:center;justify-content:center;flex-direction:column;gap:8px;background:radial-gradient(ellipse at 50% 40%,#1a3a6a 0%,#0a1428 60%,#050810 100%);text-align:center;padding:20px;overflow:hidden">
+  <div class="cfwrap" id="confetti-tahniah"></div>
+  <div style="font-size:72px;line-height:1;animation:bounce 1s steps(2) infinite;filter:drop-shadow(0 0 20px rgba(255,215,0,0.8))">🏆</div>
+  <div style="font-family:'Press Start 2P',monospace;font-size:15px;color:#FFD700;text-shadow:3px 3px 0 #7a5900;background:rgba(0,0,60,0.8);padding:10px 16px;border:3px solid #FFD700;line-height:2">TAHNIAH!</div>
+  <div style="font-family:'Press Start 2P',monospace;font-size:8px;color:#fff;line-height:2.2;background:rgba(0,0,40,0.8);padding:10px 14px;border:2px solid rgba(255,215,0,0.3)">ANDA BERJAYA<br>TAMATKAN<br>SEMUA 10 TAHAP!</div>
+  <div style="font-size:22px;margin:4px 0;letter-spacing:4px;animation:bounce 1s steps(2) infinite">⭐⭐⭐⭐⭐</div>
+  <div id="tahniah-score" style="font-family:'Press Start 2P',monospace;font-size:7px;color:#81C784;line-height:2.2;background:rgba(0,80,0,0.3);padding:8px 16px;border:2px solid rgba(129,199,132,0.4)"></div>
+  <div id="tahniah-pokemon" style="font-family:'Press Start 2P',monospace;font-size:7px;color:#FFD700;line-height:2"></div>
+  <div class="bwrap" style="margin-top:8px;width:240px">
+    <button class="btn btn-go" onclick="resetGame()" style="font-size:9px;padding:14px">🔄 MAIN SEMULA</button>
+    <button class="btn btn-me btn-sm" onclick="go('s-menu')">☰ MENU</button>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="s-result" class="screen">
+  <div class="cfwrap" id="confetti"></div>
+  <div id="r-sprite-wrap"></div>
+  <div class="rtitle" id="r-title">MENANG!</div>
+  <div class="rmsg" id="r-msg"></div>
+  <div class="rxp" id="r-xp">+50 XP</div>
+  <div class="rbadge" id="r-badge">Pokemon Ditangkap!</div>
+  <div class="bwrap" style="margin-top:8px">
+    <button class="btn btn-gr" id="r-next" onclick="nextAction()">➜ SETERUSNYA</button>
+    <button class="btn btn-me btn-sm" onclick="go('s-map')">🗺 PETA</button>
+    <button class="btn btn-sm" onclick="go('s-menu')" style="border-color:#8B949E;color:#8B949E">☰ MENU</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ===== POKEMON SVG INNER CONTENT =====
+const PK = {
+  pikachu:`<ellipse cx="50" cy="58" rx="28" ry="24" fill="#FFD700"/><polygon points="30,32 22,6 39,26" fill="#111"/><polygon points="32,30 25,10 37,26" fill="#FFD700"/><polygon points="70,32 78,6 61,26" fill="#111"/><polygon points="68,30 75,10 63,26" fill="#FFD700"/><ellipse cx="50" cy="67" rx="20" ry="13" fill="#F9A825" opacity=".5"/><circle cx="41" cy="48" r="4.5" fill="#111"/><circle cx="59" cy="48" r="4.5" fill="#111"/><circle cx="40" cy="47" r="1.5" fill="#fff"/><circle cx="58" cy="47" r="1.5" fill="#fff"/><ellipse cx="50" cy="53" rx="2" ry="1.5" fill="#111"/><path d="M45,57 Q50,62 55,57" stroke="#111" stroke-width="1.5" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="56" rx="7" ry="5" fill="#FF5252" opacity=".9"/><ellipse cx="66" cy="56" rx="7" ry="5" fill="#FF5252" opacity=".9"/><polygon points="74,68 88,56 82,76 92,71 80,86 72,78" fill="#FFD700" stroke="#F9A825" stroke-width="1"/><polygon points="74,68 88,56 82,76" fill="#111"/><ellipse cx="28" cy="65" rx="6" ry="4.5" fill="#FFD700" transform="rotate(-20,28,65)"/><ellipse cx="72" cy="65" rx="6" ry="4.5" fill="#FFD700" transform="rotate(20,72,65)"/><ellipse cx="40" cy="78" rx="8" ry="4.5" fill="#F9A825"/><ellipse cx="60" cy="78" rx="8" ry="4.5" fill="#F9A825"/>`,
+  bulbasaur:`<ellipse cx="50" cy="38" rx="22" ry="20" fill="#48A840"/><ellipse cx="50" cy="34" rx="14" ry="12" fill="#58C050"/><line x1="50" y1="22" x2="50" y2="46" stroke="#2d7a2d" stroke-width="1.5"/><line x1="36" y1="30" x2="64" y2="30" stroke="#2d7a2d" stroke-width="1.5"/><ellipse cx="32" cy="25" rx="10" ry="5" fill="#58C050" transform="rotate(-40,32,25)"/><ellipse cx="68" cy="25" rx="10" ry="5" fill="#58C050" transform="rotate(40,68,25)"/><ellipse cx="50" cy="67" rx="26" ry="18" fill="#78C850"/><ellipse cx="50" cy="70" rx="18" ry="10" fill="#A0E878" opacity=".4"/><circle cx="41" cy="64" r="4" fill="#111"/><circle cx="59" cy="64" r="4" fill="#111"/><circle cx="40" cy="63" r="1.2" fill="#fff"/><circle cx="58" cy="63" r="1.2" fill="#fff"/><path d="M45,72 Q50,76 55,72" stroke="#111" stroke-width="1.5" fill="none"/><ellipse cx="36" cy="69" rx="5" ry="3.5" fill="#FF8A80" opacity=".8"/><ellipse cx="64" cy="69" rx="5" ry="3.5" fill="#FF8A80" opacity=".8"/><rect x="33" y="80" width="10" height="8" rx="3" fill="#78C850"/><rect x="57" y="80" width="10" height="8" rx="3" fill="#78C850"/>`,
+  squirtle:`<ellipse cx="50" cy="57" rx="22" ry="19" fill="#7BA7E9"/><ellipse cx="50" cy="57" rx="14" ry="11" fill="#4A7CC9" opacity=".4"/><ellipse cx="50" cy="42" rx="20" ry="18" fill="#7BA7E9"/><circle cx="41" cy="40" r="4.5" fill="#111"/><circle cx="59" cy="40" r="4.5" fill="#111"/><circle cx="40" cy="39" r="1.5" fill="#fff"/><circle cx="58" cy="39" r="1.5" fill="#fff"/><path d="M44,49 Q50,54 56,49" stroke="#111" stroke-width="1.5" fill="none"/><ellipse cx="35" cy="47" rx="5.5" ry="4" fill="#E57373" opacity=".9"/><ellipse cx="65" cy="47" rx="5.5" ry="4" fill="#E57373" opacity=".9"/><ellipse cx="33" cy="30" rx="6" ry="8" fill="#7BA7E9" transform="rotate(-15,33,30)"/><ellipse cx="67" cy="30" rx="6" ry="8" fill="#7BA7E9" transform="rotate(15,67,30)"/><path d="M70,68 Q85,60 82,75 Q90,72 80,85" stroke="#4A7CC9" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="38" cy="80" rx="8" ry="5" fill="#7BA7E9"/><ellipse cx="62" cy="80" rx="8" ry="5" fill="#7BA7E9"/>`,
+  charmander:`<ellipse cx="50" cy="62" rx="22" ry="20" fill="#F08030"/><ellipse cx="50" cy="65" rx="14" ry="13" fill="#FAC070" opacity=".9"/><ellipse cx="50" cy="38" rx="20" ry="19" fill="#F08030"/><circle cx="41" cy="35" r="5.5" fill="#111"/><circle cx="59" cy="35" r="5.5" fill="#111"/><circle cx="40" cy="34" r="1.8" fill="#fff"/><circle cx="58" cy="34" r="1.8" fill="#fff"/><path d="M43,46 Q50,52 57,46" stroke="#111" stroke-width="1.5" fill="none"/><ellipse cx="35" cy="44" rx="5.5" ry="4" fill="#E57373" opacity=".9"/><ellipse cx="65" cy="44" rx="5.5" ry="4" fill="#E57373" opacity=".9"/><polygon points="38,22 32,8 44,20" fill="#C85020"/><polygon points="62,22 68,8 56,20" fill="#C85020"/><path d="M72,72 Q88,68 84,80 Q92,75 86,90" stroke="#E07020" stroke-width="6" fill="none" stroke-linecap="round"/><ellipse cx="87" cy="90" rx="8" ry="10" fill="#FF6D00"/><ellipse cx="87" cy="88" rx="6" ry="8" fill="#FFAB00"/><ellipse cx="87" cy="86" rx="3.5" ry="5.5" fill="#FFD740"/>`,
+  jynx:`<ellipse cx="50" cy="22" rx="26" ry="16" fill="#FFCCBC"/><ellipse cx="20" cy="45" rx="12" ry="20" fill="#FF6B6B"/><ellipse cx="80" cy="45" rx="12" ry="20" fill="#FF6B6B"/><ellipse cx="50" cy="70" rx="24" ry="22" fill="#FF1744"/><ellipse cx="50" cy="44" rx="22" ry="20" fill="#111"/><circle cx="40" cy="43" r="6" fill="#fff"/><circle cx="60" cy="43" r="6" fill="#fff"/><circle cx="41" cy="43" r="3.5" fill="#7B1FA2"/><circle cx="61" cy="43" r="3.5" fill="#7B1FA2"/><circle cx="42" cy="42" r="1.2" fill="#fff"/><circle cx="62" cy="42" r="1.2" fill="#fff"/><ellipse cx="50" cy="53" rx="7" ry="3.5" fill="#FF80AB"/><ellipse cx="26" cy="67" rx="8" ry="5" fill="#FF1744" transform="rotate(-30,26,67)"/><ellipse cx="74" cy="67" rx="8" ry="5" fill="#FF1744" transform="rotate(30,74,67)"/>`,
+  gengar:`<ellipse cx="50" cy="65" rx="30" ry="8" fill="#311B92" opacity=".4"/><ellipse cx="50" cy="58" rx="28" ry="28" fill="#4527A0"/><polygon points="30,38 26,20 34,36" fill="#4527A0"/><polygon points="50,32 48,14 52,32" fill="#4527A0"/><polygon points="70,38 74,20 66,36" fill="#4527A0"/><circle cx="40" cy="52" r="6.5" fill="#CE93D8"/><circle cx="60" cy="52" r="6.5" fill="#CE93D8"/><circle cx="40" cy="52" r="3.5" fill="#7B1FA2"/><circle cx="60" cy="52" r="3.5" fill="#7B1FA2"/><circle cx="41" cy="51" r="1.2" fill="#fff"/><circle cx="61" cy="51" r="1.2" fill="#fff"/><path d="M36,65 Q43,74 50,70 Q57,74 64,65" fill="#E040FB" stroke="#311B92" stroke-width="1"/><rect x="41" y="67" width="5" height="5" rx="1" fill="#fff"/><rect x="54" y="67" width="5" height="5" rx="1" fill="#fff"/><polygon points="28,40 18,18 38,38" fill="#4527A0"/><polygon points="72,40 82,18 62,38" fill="#4527A0"/>`,
+  raichu:`<polyline points="80,78 88,60 82,65 90,45 84,50 93,30" stroke="#FFD700" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="47" cy="63" rx="28" ry="24" fill="#E08030"/><ellipse cx="47" cy="68" rx="20" ry="14" fill="#FAC070" opacity=".6"/><ellipse cx="47" cy="42" rx="24" ry="21" fill="#E08030"/><polygon points="24,33 16,5 38,28" fill="#111"/><polygon points="26,31 20,9 36,27" fill="#E08030"/><polygon points="70,33 78,5 60,28" fill="#111"/><polygon points="68,31 74,9 62,27" fill="#E08030"/><circle cx="38" cy="40" r="5.5" fill="#111"/><circle cx="56" cy="40" r="5.5" fill="#111"/><circle cx="37" cy="39" r="1.8" fill="#fff"/><circle cx="55" cy="39" r="1.8" fill="#fff"/><path d="M41,50 Q47,56 53,50" stroke="#111" stroke-width="1.5" fill="none"/><ellipse cx="28" cy="49" rx="9" ry="7" fill="#FF6D00" opacity=".85"/><ellipse cx="66" cy="49" rx="9" ry="7" fill="#FF6D00" opacity=".85"/>`,
+  dragonair:`<path d="M50,90 Q20,75 25,55 Q30,35 50,30 Q70,25 75,10" stroke="#7986CB" stroke-width="16" fill="none" stroke-linecap="round"/><path d="M50,90 Q20,75 25,55 Q30,35 50,30 Q70,25 75,10" stroke="#9FA8DA" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M50,85 Q26,72 30,55 Q34,38 50,33" stroke="#E8EAF6" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="75" cy="10" rx="12" ry="10" fill="#7986CB"/><ellipse cx="75" cy="10" rx="9" ry="7.5" fill="#9FA8DA"/><circle cx="70" cy="8" r="3" fill="#fff"/><circle cx="80" cy="8" r="3" fill="#fff"/><circle cx="70" cy="8" r="1.8" fill="#0D47A1"/><circle cx="80" cy="8" r="1.8" fill="#0D47A1"/><circle cx="65" cy="22" r="5" fill="#E8EAF6" stroke="#9FA8DA" stroke-width="1"/><circle cx="65" cy="22" r="3" fill="#fff" opacity=".8"/>`,
+  alakazam:`<ellipse cx="18" cy="35" rx="5" ry="3" fill="#FFCC02"/><rect x="16" y="35" width="4" height="22" rx="2" fill="#FFCC02"/><ellipse cx="82" cy="32" rx="5" ry="3" fill="#FFCC02" transform="rotate(15,82,32)"/><rect x="80" y="35" width="4" height="22" rx="2" fill="#FFCC02" transform="rotate(10,82,35)"/><polygon points="50,35 30,85 70,85" fill="#C8A850"/><polygon points="50,35 30,85 70,85" fill="#E8C870" opacity=".5"/><polygon points="50,55 52,61 58,61 53,65 55,71 50,67 45,71 47,65 42,61 48,61" fill="#FFD700" opacity=".8"/><ellipse cx="50" cy="28" rx="20" ry="18" fill="#E8C870"/><path d="M36,50 Q43,46 50,48 Q57,46 64,50" stroke="#7B5E25" stroke-width="2.5" fill="none"/><path d="M40,52 Q43,56 50,54 Q57,56 60,52" stroke="#7B5E25" stroke-width="2" fill="none"/><circle cx="41" cy="31" r="5" fill="#111"/><circle cx="59" cy="31" r="5" fill="#111"/><circle cx="40" cy="30" r="1.8" fill="#fff"/><circle cx="58" cy="30" r="1.8" fill="#fff"/>`,
+  gyarados:`<path d="M50,95 Q15,80 20,60 Q25,40 50,35 Q75,30 80,10" stroke="#1565C0" stroke-width="18" fill="none" stroke-linecap="round"/><path d="M50,95 Q15,80 20,60 Q25,40 50,35 Q75,30 80,10" stroke="#1E88E5" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M50,90 Q20,77 24,60 Q28,43 50,38" stroke="#FFF9C4" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="80" cy="10" rx="14" ry="11" fill="#1565C0"/><ellipse cx="80" cy="10" rx="11" ry="8.5" fill="#1E88E5"/><circle cx="75" cy="7" r="4" fill="#fff"/><circle cx="86" cy="8" r="4" fill="#fff"/><circle cx="75" cy="7" r="2.5" fill="#E53935"/><circle cx="86" cy="8" r="2.5" fill="#E53935"/>`,
+  charizard:`<path d="M50,45 Q20,25 10,5 Q30,15 45,40" fill="#1565C0" opacity=".9"/><path d="M50,45 Q80,25 90,5 Q70,15 55,40" fill="#1565C0" opacity=".9"/><ellipse cx="50" cy="63" rx="24" ry="26" fill="#F08030"/><ellipse cx="50" cy="70" rx="16" ry="17" fill="#FAC070" opacity=".7"/><path d="M68,80 Q80,72 78,86 Q86,80 82,94" stroke="#E07020" stroke-width="6" fill="none" stroke-linecap="round"/><ellipse cx="82" cy="94" rx="8" ry="10" fill="#FF6D00"/><ellipse cx="82" cy="91" rx="6" ry="8" fill="#FFAB00"/><ellipse cx="82" cy="88" rx="4" ry="6" fill="#FFD740"/><ellipse cx="50" cy="38" rx="20" ry="19" fill="#F08030"/><circle cx="41" cy="35" r="5.5" fill="#111"/><circle cx="59" cy="35" r="5.5" fill="#111"/><circle cx="40" cy="34" r="1.8" fill="#fff"/><circle cx="58" cy="34" r="1.8" fill="#fff"/><path d="M43,46 Q50,52 57,46" stroke="#111" stroke-width="2" fill="none"/><polygon points="38,22 32,8 44,20" fill="#C85020"/><polygon points="62,22 68,8 56,20" fill="#C85020"/>`
+};
+
+// Node positions (x%, y%) in 420×1200 world — winding path
+const NP=[
+  {x:50,y:95},{x:22,y:86},{x:14,y:75},{x:36,y:65},{x:64,y:55},
+  {x:78,y:44},{x:58,y:34},{x:26,y:25},{x:50,y:15},{x:74,y:6}
+];
+// Biome colours per node
+const NC=[
+  ['#2E7D32','#4CAF50'],['#1565C0','#2196F3'],['#7F0000','#F44336'],
+  ['#01579B','#0288D1'],['#1A0033','#7B1FA2'],['#7A4F00','#FF9800'],
+  ['#311B92','#5E35B1'],['#4A0020','#C2185B'],['#002020','#00796B'],
+  ['#7F0000','#FF5722']
+];
+const NK=['bulbasaur','squirtle','charmander','jynx','gengar','raichu','dragonair','alakazam','gyarados','charizard'];
+const NN=['Hutan Hijau','Pantai Biru','Gunung Berapi','Padang Salji','Kota Misteri','Tasik Petir','Gua Naga','Langit Mimpi','Lautan Gelap','Istana Lagenda'];
+const NS=[1,1,2,2,2,3,3,3,3,3];
+
+const STAGES=[
+  {id:1,pkKey:'bulbasaur',pokemon:{name:"Bulbasaur",hp:60,maxHp:60,level:3,moves:["Vine Whip","Tackle","Growl","Razor Leaf"]}},
+  {id:2,pkKey:'squirtle',pokemon:{name:"Squirtle",hp:65,maxHp:65,level:6,moves:["Water Gun","Tackle","Bubble","Withdraw"]}},
+  {id:3,pkKey:'charmander',pokemon:{name:"Charmander",hp:70,maxHp:70,level:9,moves:["Ember","Scratch","Fire Fang","Smokescreen"]}},
+  {id:4,pkKey:'jynx',pokemon:{name:"Jynx",hp:75,maxHp:75,level:12,moves:["Ice Punch","Blizzard","Confusion","Lovely Kiss"]}},
+  {id:5,pkKey:'gengar',pokemon:{name:"Gengar",hp:80,maxHp:80,level:15,moves:["Shadow Ball","Lick","Hypnosis","Night Shade"]}},
+  {id:6,pkKey:'raichu',pokemon:{name:"Raichu",hp:88,maxHp:88,level:18,moves:["Thunderbolt","Quick Attack","Thunder","Slam"]}},
+  {id:7,pkKey:'dragonair',pokemon:{name:"Dragonair",hp:95,maxHp:95,level:21,moves:["Dragon Rage","Slam","Agility","Outrage"]}},
+  {id:8,pkKey:'alakazam',pokemon:{name:"Alakazam",hp:100,maxHp:100,level:24,moves:["Psychic","Psybeam","Future Sight","Recover"]}},
+  {id:9,pkKey:'gyarados',pokemon:{name:"Gyarados",hp:115,maxHp:115,level:27,moves:["Hyper Beam","Bite","Dragon Rage","Surf"]}},
+  {id:10,pkKey:'charizard',pokemon:{name:"Charizard",hp:140,maxHp:140,level:30,moves:["Flamethrower","Dragon Claw","Aerial Ace","Fire Blast"]}},
+];
+const PLAYER={name:"Pikachu",hp:100,maxHp:100,level:1,moves:[
+  {name:"Thunder Shock",power:40,pp:30,maxPp:30,type:"thunder"},
+  {name:"Quick Attack", power:30,pp:30,maxPp:30,type:"normal"},
+  {name:"Iron Tail",    power:50,pp:15,maxPp:15,type:"normal"},
+  {name:"Thunderbolt",  power:65,pp:15,maxPp:15,type:"thunder"},
+]};
+let G={stage:1,xp:0,caught:0,soundOn:true,player:JSON.parse(JSON.stringify(PLAYER)),stages:JSON.parse(JSON.stringify(STAGES)),unlocked:1,battle:null,resultNext:null};
+
+// SOUND
+let actx=null;
+function beep(f,d,v,t){
+  if(!G.soundOn)return;
+  try{
+    if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==='suspended')actx.resume();
+    const o=actx.createOscillator(),g=actx.createGain();
+    o.connect(g);g.connect(actx.destination);
+    o.type=t||'square';o.frequency.value=f;
+    g.gain.setValueAtTime(0,actx.currentTime);
+    g.gain.linearRampToValueAtTime(v||.15,actx.currentTime+.01);
+    g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d);
+    o.start(actx.currentTime);o.stop(actx.currentTime+d+.02);
+  }catch(e){}
+}
+function ensureACtx(){
+  if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();
+  if(actx.state==='suspended')actx.resume();
+}
+// Navigasi
+function sfxMenu(){ensureACtx();beep(440,.08,.12,'square');setTimeout(()=>beep(660,.06,.1,'square'),80);}
+function sfxSel(){ensureACtx();beep(880,.06,.1,'square');}
+// Hover tick
+function sfxTick(){if(!G.soundOn)return;ensureACtx();beep(1200,.03,'square',.06);}
+// Bunyi toggle
+function toggleSound(){
+  G.soundOn=!G.soundOn;const on=G.soundOn;
+  document.getElementById('snd-title').textContent=(on?'🔊':'🔇')+' BUNYI : '+(on?'HIDUP':'MATI');
+  document.getElementById('snd-map').textContent=on?'🔊':'🔇';
+  const ms=document.getElementById('m-snd');if(ms)ms.textContent=on?'HIDUP':'MATI';
+  if(on){ensureACtx();sfxSel();}
+}
+// ⭐ PANDAI — naik meriah
+function sfxBetul(){
+  if(!G.soundOn)return;ensureACtx();
+  [523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.1,.18,'square'),i*80));
+}
+// 😔 CUBA LAGI — turun sedih
+function sfxSalah(){
+  if(!G.soundOn)return;ensureACtx();
+  [330,262,196].forEach((f,i)=>setTimeout(()=>beep(f,.15,.18,'sawtooth'),i*100));
+}
+// 🔥 Streak x2
+function sfxStreak2(){
+  if(!G.soundOn)return;ensureACtx();
+  [659,784,1047].forEach((f,i)=>setTimeout(()=>{beep(f,.1,.2,'square')},i*80));
+}
+// 🔥🔥 Streak x3+
+function sfxStreak3(){
+  if(!G.soundOn)return;ensureACtx();
+  [523,659,784,1047,1319,1047,1319].forEach((f,i)=>
+    setTimeout(()=>{beep(f,.1,.2,'square');if(i>3)beep(f*1.5,.06,.1,'triangle')},i*65));
+}
+// ⚔️ Masuk pertarungan
+function sfxBattleStart(){
+  if(!G.soundOn)return;ensureACtx();
+  [262,330,392,523,392,523].forEach((f,i)=>setTimeout(()=>beep(f,.1,.18,'square'),i*100));
+}
+// 💥 Serang
+function sfxAtk(){
+  if(!G.soundOn)return;ensureACtx();
+  beep(180,.05,.25,'sawtooth');
+  setTimeout(()=>beep(120,.08,.2,'sawtooth'),50);
+  setTimeout(()=>beep(80,.12,.15,'square'),100);
+}
+// 😣 Kena serang
+function sfxHurt(){
+  if(!G.soundOn)return;ensureACtx();
+  beep(150,.12,.2,'sawtooth');
+  setTimeout(()=>beep(100,.1,.15,'sawtooth'),100);
+}
+// 🏆 Menang — fanfare penuh
+function sfxWin(){
+  if(!G.soundOn)return;ensureACtx();
+  const m=[523,523,523,392,523,659,784];
+  const d=[.1,.1,.1,.08,.15,.15,.3];
+  let t=0;
+  m.forEach((f,i)=>{
+    setTimeout(()=>{
+      beep(f,d[i],.2,'square');
+      if(i===m.length-1){
+        setTimeout(()=>{beep(1047,.15,.2,'square');beep(1319,.4,.15,'triangle')},50);
+      }
+    },t);
+    t+=d[i]*1000+20;
+  });
+}
+// 💀 Kalah — turun perlahan
+function sfxLose(){
+  if(!G.soundOn)return;ensureACtx();
+  [392,370,349,330,311,294].forEach((f,i)=>setTimeout(()=>beep(f,.15,.18,'sawtooth'),i*120));
+}
+// 🔓 Unlock kawasan baru
+function sfxUnlock(){
+  if(!G.soundOn)return;ensureACtx();
+  [392,523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.1,.15,'square'),i*60));
+}
+['touchstart','mousedown'].forEach(ev=>document.addEventListener(ev,()=>{
+  if(actx&&actx.state==='suspended')actx.resume();
+},{passive:true}));
+
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='s-map'){renderMap();updateFooter();setTimeout(scrollToStage,80);}if(id==='s-menu')updateMenuStats();}
+
+// ===== WORLD BACKGROUND SVG =====
+function buildWorldBg(){
+  const svg=document.getElementById('world-bg-svg');
+  // Full pixel art world background — sky, clouds, trees, terrain per zone
+  svg.innerHTML=`
+    <!-- SKY gradient zones -->
+    <rect width="420" height="200" fill="#87CEEB"/>
+    <rect y="200" width="420" height="150" fill="#A8D8EA"/>
+    <rect y="350" width="420" height="150" fill="#8FBC8F"/>
+    <rect y="500" width="420" height="150" fill="#7CFC00" opacity=".3"/>
+    <rect y="650" width="420" height="150" fill="#DAA520" opacity=".3"/>
+    <rect y="800" width="420" height="150" fill="#4682B4" opacity=".3"/>
+    <rect y="950" width="420" height="250" fill="#1a0a2e" opacity=".5"/>
+
+    <!-- CLOUDS top zone -->
+    <rect x="20" y="30" width="72" height="18" fill="#fff" opacity=".9"/>
+    <rect x="12" y="38" width="88" height="24" fill="#fff" opacity=".85"/>
+    <rect x="4" y="50" width="104" height="14" fill="#fff" opacity=".8"/>
+    <rect x="260" y="50" width="56" height="14" fill="#fff" opacity=".9"/>
+    <rect x="252" y="58" width="72" height="22" fill="#fff" opacity=".85"/>
+    <rect x="160" y="20" width="48" height="12" fill="#fff" opacity=".7"/>
+    <rect x="152" y="28" width="64" height="18" fill="#fff" opacity=".65"/>
+    <!-- clouds mid -->
+    <rect x="30" y="210" width="60" height="14" fill="#fff" opacity=".5"/>
+    <rect x="22" y="218" width="76" height="18" fill="#fff" opacity=".45"/>
+    <rect x="300" y="225" width="52" height="12" fill="#fff" opacity=".5"/>
+    <rect x="292" y="233" width="68" height="16" fill="#fff" opacity=".45"/>
+
+    <!-- BIG PIXEL TREE left top -->
+    <rect x="0" y="60" width="90" height="24" fill="#2E7D32"/>
+    <rect x="8" y="44" width="74" height="24" fill="#388E3C"/>
+    <rect x="16" y="28" width="66" height="24" fill="#43A047"/>
+    <rect x="24" y="16" width="58" height="18" fill="#4CAF50"/>
+    <rect x="32" y="8" width="50" height="14" fill="#66BB6A"/>
+    <rect x="40" y="2" width="36" height="12" fill="#81C784"/>
+    <rect x="0" y="84" width="16" height="220" fill="#5D4037"/>
+    <rect x="16" y="84" width="8" height="220" fill="#4E342E"/>
+    <!-- left tree dark edges -->
+    <rect x="0" y="60" width="8" height="90" fill="#1B5E20"/>
+    <rect x="82" y="60" width="8" height="90" fill="#1B5E20"/>
+
+    <!-- PIXEL TREE right top -->
+    <rect x="330" y="80" width="90" height="24" fill="#1B5E20"/>
+    <rect x="338" y="60" width="82" height="28" fill="#2E7D32"/>
+    <rect x="346" y="40" width="74" height="28" fill="#388E3C"/>
+    <rect x="354" y="24" width="66" height="22" fill="#43A047"/>
+    <rect x="362" y="12" width="58" height="18" fill="#4CAF50"/>
+    <rect x="370" y="4" width="50" height="14" fill="#66BB6A"/>
+    <rect x="378" y="0" width="42" height="12" fill="#81C784"/>
+    <rect x="404" y="104" width="16" height="220" fill="#5D4037"/>
+    <rect x="396" y="104" width="8" height="220" fill="#4E342E"/>
+    <!-- pink flower right -->
+    <rect x="370" y="240" width="8" height="8" fill="#E91E63"/>
+    <rect x="362" y="248" width="8" height="8" fill="#FF80AB"/>
+
+    <!-- ROCKS mid left -->
+    <rect x="0" y="360" width="28" height="48" fill="#78909C"/>
+    <rect x="8" y="352" width="36" height="12" fill="#90A4AE"/>
+    <rect x="16" y="344" width="28" height="12" fill="#B0BEC5"/>
+    <rect x="0" y="340" width="20" height="20" fill="#78909C"/>
+    <!-- rock mid right -->
+    <rect x="390" y="420" width="30" height="40" fill="#78909C"/>
+    <rect x="382" y="412" width="38" height="12" fill="#90A4AE"/>
+
+    <!-- signpost left -->
+    <rect x="60" y="490" width="10" height="60" fill="#8D6E63"/>
+    <rect x="42" y="452" width="64" height="44" fill="#A1887F"/>
+    <rect x="46" y="456" width="56" height="36" fill="#BCAAA4"/>
+    <rect x="50" y="462" width="48" height="4" fill="#8D6E63" opacity=".5"/>
+    <rect x="50" y="470" width="48" height="4" fill="#8D6E63" opacity=".5"/>
+    <rect x="50" y="478" width="38" height="4" fill="#8D6E63" opacity=".5"/>
+
+    <!-- signpost right mid -->
+    <rect x="340" y="660" width="10" height="55" fill="#8D6E63"/>
+    <rect x="322" y="624" width="62" height="40" fill="#A1887F"/>
+    <rect x="326" y="628" width="54" height="32" fill="#BCAAA4"/>
+    <rect x="330" y="634" width="46" height="4" fill="#8D6E63" opacity=".5"/>
+    <rect x="330" y="642" width="46" height="4" fill="#8D6E63" opacity=".5"/>
+
+    <!-- BUSHES left mid -->
+    <rect x="0" y="480" width="50" height="32" fill="#2E7D32"/>
+    <rect x="4" y="468" width="46" height="16" fill="#388E3C"/>
+    <rect x="8" y="460" width="38" height="12" fill="#4CAF50"/>
+    <!-- bush right low -->
+    <rect x="370" y="720" width="50" height="30" fill="#1B5E20"/>
+    <rect x="374" y="710" width="46" height="14" fill="#2E7D32"/>
+    <rect x="378" y="702" width="38" height="12" fill="#388E3C"/>
+
+    <!-- WATER area mid (tasik) -->
+    <rect x="60" y="720" width="200" height="60" fill="#2196F3" opacity=".3"/>
+    <rect x="60" y="720" width="200" height="8" fill="#64B5F6" opacity=".4"/>
+    <rect x="60" y="776" width="200" height="4" fill="#1565C0" opacity=".3"/>
+    <!-- water ripples -->
+    <rect x="80" y="736" width="40" height="4" fill="#90CAF9" opacity=".5"/>
+    <rect x="160" y="748" width="50" height="4" fill="#90CAF9" opacity=".5"/>
+    <rect x="200" y="730" width="30" height="4" fill="#90CAF9" opacity=".5"/>
+
+    <!-- SNOW area top zone -->
+    <rect x="0" y="130" width="420" height="16" fill="#E1F5FE" opacity=".3"/>
+    <rect x="40" y="138" width="60" height="12" fill="#fff" opacity=".4"/>
+    <rect x="280" y="132" width="80" height="10" fill="#fff" opacity=".4"/>
+    <!-- snowflakes -->
+    <rect x="100" y="100" width="4" height="4" fill="#fff" opacity=".5"/>
+    <rect x="180" y="80" width="4" height="4" fill="#fff" opacity=".5"/>
+    <rect x="320" y="110" width="4" height="4" fill="#fff" opacity=".5"/>
+
+    <!-- VOLCANO silhouette right -->
+    <polygon points="380,400 420,560 340,560" fill="#5D4037" opacity=".6"/>
+    <polygon points="380,400 420,560 340,560" fill="#4E342E" opacity=".3"/>
+    <rect x="372" y="396" width="16" height="16" fill="#FF5722" opacity=".7"/>
+    <rect x="368" y="400" width="8" height="8" fill="#FF9800" opacity=".6"/>
+    <rect x="380" y="398" width="8" height="6" fill="#FF9800" opacity=".6"/>
+
+    <!-- DARK FOREST top -->
+    <rect x="0" y="920" width="420" height="16" fill="#1B5E20" opacity=".6"/>
+    <rect x="0" y="900" width="80" height="28" fill="#1B5E20" opacity=".7"/>
+    <rect x="340" y="900" width="80" height="28" fill="#1B5E20" opacity=".7"/>
+    <rect x="160" y="910" width="100" height="20" fill="#2E7D32" opacity=".5"/>
+
+    <!-- FIRE/LEGEND zone bottom -->
+    <rect x="0" y="1080" width="420" height="120" fill="#BF360C" opacity=".2"/>
+    <rect x="0" y="1140" width="420" height="60" fill="#FF5722" opacity=".1"/>
+
+    <!-- PATH GROUND -->
+    <!-- ground base -->
+    <rect x="0" y="1080" width="420" height="14" fill="#4CAF50"/>
+    <rect x="0" y="1094" width="420" height="10" fill="#388E3C"/>
+    <rect x="0" y="1104" width="420" height="96" fill="#6D4C41"/>
+    <!-- stones row 1 -->
+    <rect x="2" y="1104" width="40" height="20" fill="#C4A97A"/>
+    <rect x="46" y="1106" width="36" height="18" fill="#B89060"/>
+    <rect x="86" y="1104" width="44" height="20" fill="#D4B98A"/>
+    <rect x="134" y="1105" width="38" height="19" fill="#C8A870"/>
+    <rect x="176" y="1104" width="42" height="20" fill="#B89060"/>
+    <rect x="222" y="1106" width="40" height="18" fill="#C4A97A"/>
+    <rect x="266" y="1104" width="46" height="20" fill="#D4B98A"/>
+    <rect x="316" y="1105" width="38" height="19" fill="#C8A870"/>
+    <rect x="358" y="1104" width="60" height="20" fill="#B89060"/>
+    <!-- stone top shadows -->
+    <rect x="2" y="1104" width="40" height="3" fill="#A07848"/>
+    <rect x="46" y="1106" width="36" height="3" fill="#907040"/>
+    <rect x="86" y="1104" width="44" height="3" fill="#A07848"/>
+    <rect x="134" y="1105" width="38" height="3" fill="#907040"/>
+    <rect x="176" y="1104" width="42" height="3" fill="#A07848"/>
+    <rect x="222" y="1106" width="40" height="3" fill="#907040"/>
+    <rect x="266" y="1104" width="46" height="3" fill="#A07848"/>
+    <rect x="316" y="1105" width="38" height="3" fill="#907040"/>
+    <rect x="358" y="1104" width="60" height="3" fill="#A07848"/>
+    <!-- stones row 2 -->
+    <rect x="20" y="1124" width="44" height="20" fill="#C4A97A"/>
+    <rect x="68" y="1126" width="40" height="18" fill="#B89060"/>
+    <rect x="112" y="1124" width="46" height="20" fill="#D4B98A"/>
+    <rect x="162" y="1125" width="40" height="19" fill="#C8A870"/>
+    <rect x="206" y="1124" width="44" height="20" fill="#B89060"/>
+    <rect x="254" y="1126" width="42" height="18" fill="#C4A97A"/>
+    <rect x="300" y="1124" width="48" height="20" fill="#D4B98A"/>
+    <rect x="352" y="1125" width="66" height="19" fill="#C8A870"/>
+    <!-- grass tufts on ground -->
+    <rect x="12" y="1094" width="8" height="14" fill="#4CAF50"/>
+    <rect x="16" y="1090" width="4" height="6" fill="#66BB6A"/>
+    <rect x="60" y="1096" width="6" height="12" fill="#388E3C"/>
+    <rect x="120" y="1094" width="8" height="14" fill="#4CAF50"/>
+    <rect x="200" y="1096" width="6" height="12" fill="#388E3C"/>
+    <rect x="280" y="1094" width="8" height="14" fill="#4CAF50"/>
+    <rect x="360" y="1096" width="6" height="12" fill="#388E3C"/>
+    <rect x="400" y="1094" width="8" height="14" fill="#4CAF50"/>
+  `;
+}
+
+// ===== MAP RENDER =====
+function renderMap(){
+  buildWorldBg();
+  const world=document.getElementById('map-world');
+  world.querySelectorAll('.snode').forEach(n=>n.remove());
+  drawPath();
+
+  NP.forEach((pos,i)=>{
+    const id=i+1;
+    const done=id<G.stage;
+    const cur=id===G.stage;
+    const locked=id>G.unlocked;
+    const [c1,c2]=NC[i];
+    const stars=NS[i];
+    const starH=Array.from({length:3},(_,k)=>`<span class="star${k<stars?'':' off'}">★</span>`).join('');
+
+    const node=document.createElement('div');
+    node.className='snode'+(locked?' locked':'')+(cur?' current':'')+(done?' completed':'');
+    node.id='node-'+id;
+    node.style.left=pos.x+'%';
+    node.style.top=pos.y+'%';
+
+    node.innerHTML=`
+      <div class="snode-stars">${starH}</div>
+      <div class="snode-outer${cur?' is-current':''}">
+        <div class="snode-border" style="background:radial-gradient(circle at 35% 35%,${c2},${c1});border-color:${locked?'#333':done?'#81C784':cur?'#FFD700':'rgba(255,255,255,0.4)'}">
+          <svg class="snode-pk" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">${PK[NK[i]]||''}</svg>
+          ${locked?'<div class="lock-badge">🔒</div>':''}
+          ${done?'<div class="done-badge">✓</div>':''}
+        </div>
+        <div class="snode-label">${String(id).padStart(2,'0')}. ${NN[i]}</div>
+      </div>
+    `;
+    if(!locked) node.onclick=()=>{sfxSel();enterStage(id);}
+    world.appendChild(node);
+  });
+
+  posPin();
+}
+
+function drawPath(){
+  const svg=document.getElementById('path-svg');
+  const W=420,H=1200;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('height',H);
+  const pts=NP.map(p=>({x:p.x/100*W,y:p.y/100*H}));
+  let d=`M${pts[0].x},${pts[0].y}`;
+  for(let i=1;i<pts.length;i++){
+    const p=pts[i-1],c=pts[i];
+    const mx=(p.x+c.x)/2,my=(p.y+c.y)/2;
+    d+=` Q${p.x},${p.y} ${mx},${my}`;
+  }
+  // Pixel-style thick path
+  svg.innerHTML=`
+    <path d="${d}" stroke="rgba(0,0,0,0.4)" stroke-width="26" fill="none" stroke-linecap="square" stroke-linejoin="miter"/>
+    <path d="${d}" stroke="#5D4037" stroke-width="22" fill="none" stroke-linecap="square"/>
+    <path d="${d}" stroke="#8D6E63" stroke-width="18" fill="none" stroke-linecap="square"/>
+    <path d="${d}" stroke="#C4A97A" stroke-width="14" fill="none" stroke-linecap="square"/>
+    <path d="${d}" stroke="#FFD700" stroke-width="10" fill="none" stroke-linecap="square" opacity=".7"/>
+    <path d="${d}" stroke="rgba(255,255,255,0.2)" stroke-width="4" fill="none" stroke-linecap="square" stroke-dasharray="8,12"/>
+  `;
+}
+
+function posPin(){
+  const pin=document.getElementById('player-pin');
+  const world=document.getElementById('map-world');
+  const pos=NP[G.stage-1];
+  const wW=world.offsetWidth||420;
+  const wH=world.offsetHeight||1200;
+  pin.style.left=(pos.x/100*wW)+'px';
+  pin.style.top=((pos.y/100*wH)-4)+'px';
+}
+function scrollToStage(){
+  const scroll=document.getElementById('map-scroll');
+  const world=document.getElementById('map-world');
+  const pos=NP[G.stage-1];
+  const H=world.offsetHeight||1200;
+  const nodeY=pos.y/100*H;
+  const scrollH=scroll.offsetHeight||580;
+  scroll.scrollTo({top:nodeY-scrollH/2,behavior:'smooth'});
+}
+function updateFooter(){document.getElementById('f-xp').textContent=G.xp;document.getElementById('f-stg').textContent=G.stage+'/10';document.getElementById('f-caught').textContent=G.caught;}
+function updateMenuStats(){document.getElementById('m-stg').textContent=G.stage+' / 10';document.getElementById('m-xp').textContent=G.xp;document.getElementById('m-caught').textContent=G.caught;document.getElementById('m-snd').textContent=G.soundOn?'HIDUP':'MATI';}
+function enterStage(id){const st=G.stages.find(s=>s.id===id);if(!st||id>G.unlocked)return;G.stage=id;startBattle(st);}
+
+
+// ============================================================
+// GAMBAR PERKATAAN — SVG KARTUN
+// ============================================================
+const GAMBAR = {
+  meja: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+    <rect width="110" height="110" rx="16" fill="#FFF8F0"/>
+    <rect width="110" height="110" rx="16" fill="none" stroke="#F4A070" stroke-width="3"/>
+    <rect x="10" y="36" width="90" height="12" rx="4" fill="#C8860A"/>
+    <rect x="10" y="36" width="90" height="5" rx="3" fill="#E8A030"/>
+    <rect x="10" y="44" width="90" height="4" fill="#A06808"/>
+    <line x1="25" y1="37" x2="25" y2="47" stroke="#B07010" stroke-width="1.2" opacity=".5"/>
+    <line x1="50" y1="37" x2="50" y2="47" stroke="#B07010" stroke-width="1.2" opacity=".5"/>
+    <line x1="75" y1="37" x2="75" y2="47" stroke="#B07010" stroke-width="1.2" opacity=".5"/>
+    <rect x="18" y="48" width="10" height="52" rx="3" fill="#C8860A" stroke="#A06808" stroke-width="1.5"/>
+    <rect x="18" y="48" width="4" height="52" rx="2" fill="#E8A030" opacity=".5"/>
+    <rect x="82" y="48" width="10" height="52" rx="3" fill="#C8860A" stroke="#A06808" stroke-width="1.5"/>
+    <rect x="82" y="48" width="4" height="52" rx="2" fill="#E8A030" opacity=".5"/>
+    <rect x="24" y="74" width="62" height="6" rx="3" fill="#B07010"/>
+    <rect x="14" y="96" width="18" height="6" rx="3" fill="#A06808"/>
+    <rect x="78" y="96" width="18" height="6" rx="3" fill="#A06808"/>
+    <ellipse cx="55" cy="106" rx="38" ry="4" fill="#000" opacity=".1"/>
+  </svg>`,
+  buku: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+    <rect width="110" height="110" rx="16" fill="#FFF8F0"/>
+    <rect width="110" height="110" rx="16" fill="none" stroke="#F4A070" stroke-width="3"/>
+    <rect x="5" y="82" width="100" height="6" rx="2" fill="#A0703A"/>
+    <rect x="5" y="82" width="100" height="2" rx="1" fill="#D4A36A"/>
+    <g><rect x="62" y="30" width="18" height="54" rx="3" fill="#66BB6A" stroke="#388E3C" stroke-width="1.5"/><rect x="62" y="30" width="5" height="54" rx="2" fill="#1B5E20"/><rect x="68" y="38" width="10" height="3" rx="1" fill="#C8E6C9" opacity=".8"/><rect x="68" y="44" width="8" height="2" rx="1" fill="#C8E6C9" opacity=".6"/></g>
+    <g><rect x="16" y="36" width="16" height="48" rx="3" fill="#EF5350" stroke="#C62828" stroke-width="1.5"/><rect x="16" y="36" width="5" height="48" rx="2" fill="#B71C1C"/><rect x="22" y="44" width="8" height="3" rx="1" fill="#FFCDD2" opacity=".8"/></g>
+    <g><rect x="34" y="20" width="26" height="64" rx="3" fill="#42A5F5" stroke="#1565C0" stroke-width="1.5"/><rect x="34" y="20" width="7" height="64" rx="2" fill="#0D47A1"/><rect x="43" y="30" width="14" height="3" rx="1" fill="#BBDEFB" opacity=".9"/><rect x="43" y="36" width="11" height="2" rx="1" fill="#BBDEFB" opacity=".7"/><rect x="43" y="41" width="13" height="2" rx="1" fill="#BBDEFB" opacity=".7"/></g>
+    <ellipse cx="55" cy="94" rx="30" ry="3" fill="#000" opacity=".1"/>
+  </svg>`,
+  topi: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+    <rect width="110" height="110" rx="16" fill="#FFF8F0"/>
+    <rect width="110" height="110" rx="16" fill="none" stroke="#F4A070" stroke-width="3"/>
+    <path d="M18,72 Q18,80 30,80 L80,80 Q90,80 90,74 Q90,68 80,68 L30,68 Q20,68 18,72Z" fill="#2196F3" stroke="#1565C0" stroke-width="1.5"/>
+    <path d="M18,72 Q18,76 30,76 L80,76" fill="none" stroke="#42A5F5" stroke-width="1.5" opacity=".6"/>
+    <path d="M22,70 Q22,20 55,16 Q88,20 88,70Z" fill="#F44336" stroke="#C62828" stroke-width="1.5"/>
+    <path d="M55,16 Q42,30 30,68" fill="none" stroke="#C62828" stroke-width="1.5" opacity=".5"/>
+    <path d="M55,16 Q68,30 80,68" fill="none" stroke="#C62828" stroke-width="1.5" opacity=".5"/>
+    <path d="M55,16 Q42,30 30,68 L40,68 Q50,34 55,18 Q60,34 70,68 L80,68 Q68,30 55,16Z" fill="#4CAF50" opacity=".85"/>
+    <circle cx="55" cy="18" r="5" fill="#FFD700" stroke="#F9A825" stroke-width="1.5"/>
+    <path d="M22,70 L88,70" stroke="#1565C0" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="55" cy="82" rx="34" ry="5" fill="#000" opacity=".1"/>
+  </svg>`,
+  tisu: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+    <rect width="110" height="110" rx="16" fill="#FFF8F0"/>
+    <rect width="110" height="110" rx="16" fill="none" stroke="#F4A070" stroke-width="3"/>
+    <rect x="14" y="42" width="82" height="56" rx="8" fill="#E91E63" stroke="#AD1457" stroke-width="2"/>
+    <rect x="14" y="30" width="82" height="16" rx="6" fill="#F06292" stroke="#AD1457" stroke-width="2"/>
+    <rect x="30" y="22" width="50" height="12" rx="6" fill="#AD1457"/>
+    <rect x="32" y="23" width="46" height="10" rx="5" fill="#880E4F"/>
+    <path d="M36,8 Q42,4 48,8 Q54,12 60,8 Q66,4 72,8 L74,24 Q66,20 60,24 Q54,28 48,24 Q42,20 36,24Z" fill="white" stroke="#E0E0E0" stroke-width="1.5"/>
+    <rect x="18" y="46" width="6" height="44" rx="3" fill="white" opacity=".15"/>
+    <circle cx="38" cy="62" r="7" fill="#F48FB1" opacity=".6"/>
+    <circle cx="38" cy="62" r="3" fill="#F06292" opacity=".8"/>
+    <circle cx="72" cy="70" r="7" fill="#F48FB1" opacity=".6"/>
+    <circle cx="72" cy="70" r="3" fill="#F06292" opacity=".8"/>
+    <ellipse cx="55" cy="100" rx="36" ry="5" fill="#000" opacity=".1"/>
+  </svg>`,
+  kaki: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+    <rect width="110" height="110" rx="16" fill="#FFF8F0"/>
+    <rect width="110" height="110" rx="16" fill="none" stroke="#F4A070" stroke-width="3"/>
+    <path d="M18,50 Q16,65 18,78 Q22,96 55,96 Q88,96 92,78 Q94,65 92,50 Q88,34 55,32 Q22,34 18,50Z" fill="#FFCC99" stroke="#E8A060" stroke-width="2.5"/>
+    <ellipse cx="55" cy="88" rx="28" ry="12" fill="#F5B880" opacity=".5"/>
+    <ellipse cx="25" cy="42" rx="9" ry="7" fill="#F5B880" opacity=".55"/>
+    <ellipse cx="39" cy="37" rx="9" ry="7" fill="#F5B880" opacity=".55"/>
+    <ellipse cx="55" cy="35" rx="9" ry="7" fill="#F5B880" opacity=".55"/>
+    <ellipse cx="71" cy="37" rx="9" ry="7" fill="#F5B880" opacity=".55"/>
+    <ellipse cx="85" cy="42" rx="7" ry="6" fill="#F5B880" opacity=".55"/>
+    <ellipse cx="25" cy="26" rx="12" ry="15" fill="#FFCC99" stroke="#E8A060" stroke-width="2.2"/>
+    <ellipse cx="25" cy="21" rx="8.5" ry="7" fill="#FFE0B2"/>
+    <ellipse cx="40" cy="20" rx="10" ry="14" fill="#FFCC99" stroke="#E8A060" stroke-width="2.2"/>
+    <ellipse cx="40" cy="15" rx="7" ry="6" fill="#FFE0B2"/>
+    <ellipse cx="55" cy="18" rx="10" ry="14" fill="#FFCC99" stroke="#E8A060" stroke-width="2.2"/>
+    <ellipse cx="55" cy="13" rx="7" ry="6" fill="#FFE0B2"/>
+    <ellipse cx="70" cy="20" rx="9" ry="13" fill="#FFCC99" stroke="#E8A060" stroke-width="2.2"/>
+    <ellipse cx="70" cy="15" rx="6.5" ry="5.5" fill="#FFE0B2"/>
+    <ellipse cx="83" cy="27" rx="8" ry="11" fill="#FFCC99" stroke="#E8A060" stroke-width="2.2"/>
+    <ellipse cx="83" cy="23" rx="5.5" ry="5" fill="#FFE0B2"/>
+    <ellipse cx="55" cy="104" rx="34" ry="4" fill="#000" opacity=".08"/>
+  </svg>`,
+  tali: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+    <rect width="110" height="110" rx="16" fill="#FFF8F0"/>
+    <rect width="110" height="110" rx="16" fill="none" stroke="#F4A070" stroke-width="3"/>
+    <circle cx="55" cy="58" r="38" fill="none" stroke="#B8860B" stroke-width="12" opacity=".18"/>
+    <circle cx="55" cy="58" r="36" fill="none" stroke="#C8960A" stroke-width="11"/>
+    <circle cx="55" cy="58" r="36" fill="none" stroke="#E8B830" stroke-width="6" stroke-dasharray="9,9"/>
+    <circle cx="55" cy="58" r="36" fill="none" stroke="#F5D060" stroke-width="2.5" stroke-dasharray="4,14" stroke-dashoffset="3"/>
+    <circle cx="55" cy="58" r="42" fill="none" stroke="#A07010" stroke-width="2" opacity=".35"/>
+    <circle cx="55" cy="58" r="30" fill="none" stroke="#A07010" stroke-width="2" opacity=".35"/>
+    <circle cx="55" cy="58" r="20" fill="none" stroke="#C8960A" stroke-width="10"/>
+    <circle cx="55" cy="58" r="20" fill="none" stroke="#E8B830" stroke-width="5" stroke-dasharray="7,7" stroke-dashoffset="3"/>
+    <circle cx="55" cy="58" r="20" fill="none" stroke="#F5D060" stroke-width="2" stroke-dasharray="3,11" stroke-dashoffset="1"/>
+    <circle cx="55" cy="58" r="25" fill="none" stroke="#A07010" stroke-width="1.5" opacity=".3"/>
+    <circle cx="55" cy="58" r="15" fill="none" stroke="#A07010" stroke-width="1.5" opacity=".3"/>
+    <path d="M24,26 Q18,16 14,10" fill="none" stroke="#C8960A" stroke-width="10" stroke-linecap="round"/>
+    <path d="M24,26 Q18,16 14,10" fill="none" stroke="#E8B830" stroke-width="5" stroke-linecap="round" stroke-dasharray="5,7"/>
+    <path d="M74,26 Q82,16 88,10" fill="none" stroke="#C8960A" stroke-width="10" stroke-linecap="round"/>
+    <path d="M74,26 Q82,16 88,10" fill="none" stroke="#E8B830" stroke-width="5" stroke-linecap="round" stroke-dasharray="5,7"/>
+    <ellipse cx="55" cy="103" rx="34" ry="4" fill="#000" opacity=".08"/>
+  </svg>`,
+  baju: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+    <rect width="110" height="110" rx="16" fill="#FFF8F0"/>
+    <rect width="110" height="110" rx="16" fill="none" stroke="#F4A070" stroke-width="3"/>
+    <path d="M6,28 Q4,40 8,52 Q12,58 22,56 L28,30Z" fill="#42A5F5" stroke="#1565C0" stroke-width="1.5"/>
+    <path d="M104,28 Q106,40 102,52 Q98,58 88,56 L82,30Z" fill="#42A5F5" stroke="#1565C0" stroke-width="1.5"/>
+    <path d="M28,18 Q36,8 55,8 Q74,8 82,18 L88,102 Q55,108 22,102Z" fill="#42A5F5" stroke="#1565C0" stroke-width="1.5"/>
+    <path d="M40,18 Q48,10 55,12 Q62,10 70,18 Q62,28 55,26 Q48,28 40,18Z" fill="#1565C0"/>
+    <path d="M32,22 Q30,46 32,75" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" opacity=".2"/>
+    <line x1="38" y1="68" x2="34" y2="100" stroke="#1565C0" stroke-width="1.5" opacity=".4"/>
+    <line x1="72" y1="68" x2="76" y2="100" stroke="#1565C0" stroke-width="1.5" opacity=".4"/>
+    <ellipse cx="55" cy="106" rx="34" ry="5" fill="#000" opacity=".1"/>
+  </svg>`,
+  bola: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+    <rect width="110" height="110" rx="16" fill="#FFF8F0"/>
+    <rect width="110" height="110" rx="16" fill="none" stroke="#F4A070" stroke-width="3"/>
+    <ellipse cx="55" cy="96" rx="34" ry="8" fill="#000" opacity=".12"/>
+    <circle cx="55" cy="54" r="40" fill="white" stroke="#DDD" stroke-width="1"/>
+    <path d="M55,14 Q80,20 90,44 L55,54Z" fill="#F44336"/>
+    <path d="M90,44 Q94,70 74,86 L55,54Z" fill="#2196F3"/>
+    <path d="M74,86 Q55,95 36,86 L55,54Z" fill="#FFC107"/>
+    <path d="M36,86 Q16,70 20,44 L55,54Z" fill="#4CAF50"/>
+    <path d="M20,44 Q30,20 55,14 L55,54Z" fill="#FF9800"/>
+    <circle cx="55" cy="54" r="40" fill="none" stroke="#BDBDBD" stroke-width="2"/>
+    <circle cx="42" cy="36" r="10" fill="white" opacity=".3"/>
+  </svg>`,
+  susu: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+    <rect width="110" height="110" rx="16" fill="#FFF8F0"/>
+    <rect width="110" height="110" rx="16" fill="none" stroke="#F4A070" stroke-width="3"/>
+    <path d="M28,25 L22,90 Q55,98 88,90 L82,25Z" fill="#E3F2FD" stroke="#90CAF9" stroke-width="2.5"/>
+    <path d="M30,35 L24,88 Q55,96 86,88 L80,35Z" fill="white"/>
+    <ellipse cx="55" cy="25" rx="27" ry="7" fill="#BBDEFB" stroke="#90CAF9" stroke-width="2"/>
+    <ellipse cx="55" cy="24" rx="23" ry="5" fill="#E3F2FD"/>
+    <ellipse cx="55" cy="33" rx="22" ry="8" fill="white" stroke="#E0E0E0" stroke-width="1"/>
+    <circle cx="43" cy="30" r="6" fill="white" stroke="#E0E0E0" stroke-width="1"/>
+    <circle cx="53" cy="27" r="7" fill="white" stroke="#E0E0E0" stroke-width="1"/>
+    <circle cx="64" cy="29" r="6" fill="white" stroke="#E0E0E0" stroke-width="1"/>
+    <circle cx="72" cy="33" r="5" fill="white" stroke="#E0E0E0" stroke-width="1"/>
+    <path d="M84,45 Q90,50 88,58 Q86,64 84,62" fill="white" stroke="#E0E0E0" stroke-width="1.5" stroke-linecap="round"/>
+    <ellipse cx="86" cy="64" rx="4" ry="5" fill="white" stroke="#E0E0E0" stroke-width="1.5"/>
+    <path d="M32,38 Q30,58 32,80" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+    <ellipse cx="55" cy="103" rx="30" ry="5" fill="#000" opacity=".08"/>
+  </svg>`,
+  mata: `<svg viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg">
+    <rect width="110" height="110" rx="16" fill="#FFF8F0"/>
+    <rect width="110" height="110" rx="16" fill="none" stroke="#F4A070" stroke-width="3"/>
+    <path d="M8,55 Q30,20 55,18 Q80,20 102,55 Q80,90 55,92 Q30,90 8,55Z" fill="white" stroke="#D0C0A0" stroke-width="2"/>
+    <circle cx="55" cy="55" r="26" fill="#4E9FE0" stroke="#2B70B0" stroke-width="2"/>
+    <circle cx="55" cy="55" r="18" fill="#5BAEE8"/>
+    <circle cx="55" cy="55" r="13" fill="#1a1a1a"/>
+    <circle cx="55" cy="55" r="10" fill="#0a0a0a"/>
+    <circle cx="47" cy="47" r="5" fill="white" opacity=".85"/>
+    <circle cx="60" cy="50" r="3" fill="white" opacity=".5"/>
+    <path d="M8,55 Q30,20 55,18 Q80,20 102,55" fill="none" stroke="#5D3A1A" stroke-width="3" stroke-linecap="round"/>
+    <line x1="20" y1="40" x2="13" y2="30" stroke="#3E2010" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="32" y1="28" x2="27" y2="17" stroke="#3E2010" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="46" y1="20" x2="44" y2="9"  stroke="#3E2010" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="60" y1="19" x2="60" y2="8"  stroke="#3E2010" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="74" y1="23" x2="78" y2="13" stroke="#3E2010" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="86" y1="32" x2="93" y2="24" stroke="#3E2010" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M8,55 Q30,90 55,92 Q80,90 102,55" fill="none" stroke="#C0A080" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>`,
+};
+
+function getGambar(perkataan, cls='quiz-gambar'){
+  const svg = GAMBAR[perkataan] || '';
+  if(!svg) return '';
+  return svg.replace('<svg ', `<svg class="${cls}" `);
+}
+
+const PERKATAAN = [
+  {perkataan:'meja', s1:'me', s2:'ja'},
+  {perkataan:'buku', s1:'bu', s2:'ku'},
+  {perkataan:'topi', s1:'to', s2:'pi'},
+  {perkataan:'tisu', s1:'ti', s2:'su'},
+  {perkataan:'kaki', s1:'ka', s2:'ki'},
+  {perkataan:'tali', s1:'ta', s2:'li'},
+  {perkataan:'baju', s1:'ba', s2:'ju'},
+  {perkataan:'bola', s1:'bo', s2:'la'},
+  {perkataan:'susu', s1:'su', s2:'su'},
+  {perkataan:'mata', s1:'ma', s2:'ta'},
+];
+
+function getWrong(betul,n=3){
+  const seen=new Set([betul]);
+  return PERKATAAN.filter(p=>{if(seen.has(p.perkataan))return false;seen.add(p.perkataan);return true;})
+    .sort(()=>Math.random()-.5).slice(0,n).map(p=>p.perkataan);
+}
+function getWrongSuku(s1,s2,n=3){
+  const key=s1+s2;
+  return PERKATAAN.filter(p=>(p.s1+p.s2)!==key)
+    .sort(()=>Math.random()-.5).slice(0,n).map(p=>p.s1+'+'+p.s2);
+}
+
+// 2 JENIS: batang (KV+KV=KVKV) dan bahagi (KVKV=KV+KV)
+function getRandSoalan(usedIdx){
+  let wi;
+  do { wi=Math.floor(Math.random()*PERKATAAN.length); }
+  while(usedIdx.length>=4 && usedIdx.slice(-4).includes(wi));
+  usedIdx.push(wi); if(usedIdx.length>12) usedIdx.shift();
+  const pk=PERKATAAN[wi];
+  const jenis=(usedIdx.length%2===0)?'batang':'bahagi';
+  if(jenis==='batang'){
+    const p=[pk.perkataan,...getWrong(pk.perkataan)].sort(()=>Math.random()-.5);
+    return {jenis,pk,pilihan:p,jawapan:pk.perkataan};
+  } else {
+    const sukuBetul=pk.s1+'+'+pk.s2;
+    const p=[sukuBetul,...getWrongSuku(pk.s1,pk.s2)].sort(()=>Math.random()-.5);
+    return {jenis,pk,pilihan:p,jawapan:sukuBetul};
+  }
+}
+
+// ===== BATTLE =====
+function mkSvg(k,w,h){return`<svg viewBox="0 0 100 100" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated">${PK[k]||''}</svg>`;}
+
+function startBattle(s){
+  G.battle={
+    enemy:JSON.parse(JSON.stringify(s.pokemon)),pkKey:s.pkKey,
+    pHp:G.player.hp,pMax:G.player.maxHp,
+    stageId:s.id,turn:'player',over:false,
+    streak:0,usedIdx:[],currentQ:null,totalQ:0,betulQ:0,
+  };
+  go('s-battle'); renderBattle(); newSoalan();
+  sfxBattleStart();
+  setLog(G.battle.enemy.name+' muncul! Jawab untuk serang!');
+}
+
+function renderBattle(){
+  const b=G.battle;
+  document.getElementById('btl-arena').innerHTML=`
+    <div class="bside">
+      <div class="hpbox"><div class="hpname">⚡ ${G.player.name}</div><div class="hplv">LV.${G.player.level}</div><div class="hptrack"><div id="php-fill" class="hpfill ${hpC(b.pHp,b.pMax)}" style="width:${pct(b.pHp,b.pMax)}%"></div></div><div class="hpnum" id="php-num">${b.pHp}/${b.pMax}</div></div>
+      <div class="bsprite-wrap player" id="spr-player">${mkSvg('pikachu',88,88)}</div>
+    </div>
+    <div class="btl-vs">VS</div>
+    <div class="bside enemy">
+      <div class="hpbox"><div class="hpname">${b.enemy.name}</div><div class="hplv">LV.${b.enemy.level}</div><div class="hptrack"><div id="ehp-fill" class="hpfill ${hpC(b.enemy.hp,b.enemy.maxHp)}" style="width:${pct(b.enemy.hp,b.enemy.maxHp)}%"></div></div><div class="hpnum" id="ehp-num">${b.enemy.hp}/${b.enemy.maxHp}</div></div>
+      <div class="bsprite-wrap enemy" id="spr-enemy">${mkSvg(b.pkKey,88,88)}</div>
+    </div>`;
+}
+
+function newSoalan(){
+  const b=G.battle; if(b.over)return;
+  const q=getRandSoalan(b.usedIdx);
+  b.currentQ=q; b.turn='player';
+  const jEl=document.getElementById('quiz-jenis');
+  const dEl=document.getElementById('quiz-display');
+  if(q.jenis==='batang'){
+    jEl.innerHTML='<span class="jenis-batang">📖 KV + KV = KVKV</span>';
+    dEl.innerHTML=`
+      <div class="suku-box highlight">${q.pk.s1.toUpperCase()}</div>
+      <div class="suku-plus">+</div>
+      <div class="suku-box highlight">${q.pk.s2.toUpperCase()}</div>
+      <div class="suku-eq">=</div>
+      <div class="suku-blank">???</div>`;
+  } else {
+    jEl.innerHTML='<span class="jenis-eja">✂️ KVKV = KV + KV</span>';
+    const letters=q.pk.perkataan.toUpperCase().split('');
+    const n1=q.pk.s1.length;
+    const boxes=letters.map((l,i)=>{
+      const col=i<n1?'#64B5F6':'#FF9800';
+      return `<div class="huruf-box" style="border-color:${col};color:${col}">${l}</div>`;
+    }).join('<div class="huruf-sep"></div>');
+    dEl.innerHTML=`
+      <div style="text-align:center">
+        <div style="width:70px;height:70px;margin:0 auto 4px">${getGambar(q.pk.perkataan,'').replace('<svg ','<svg width="70" height="70" ')}</div>
+        <div class="huruf-row" style="justify-content:center;margin-top:4px">${boxes}</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:6px;color:#aaa;margin-top:4px">Pilih suku kata:</div>
+      </div>`;
+  }
+  updateStreak(); renderPilihan();
+}
+
+function renderPilihan(){
+  const b=G.battle, q=b.currentQ;
+  document.getElementById('quiz-pilihan').innerHTML=q.pilihan.map(p=>`
+    <button class="pilihan-btn" onclick="jawab(this,'${p}')" onmouseover="sfxTick()" ${b.over||b.turn!=='player'?'disabled':''}>
+      ${formatPilihan(p,q.jenis)}
+    </button>`).join('');
+}
+
+function formatPilihan(p,jenis){
+  if(jenis==='batang'){
+    const pk2=PERKATAAN.find(x=>x.perkataan===p);
+    const letters=p.toUpperCase().split('');
+    const n1=pk2?pk2.s1.length:2;
+    const imgHtml=`<div style="width:32px;height:32px;flex-shrink:0">${getGambar(p,'').replace('<svg ','<svg width="32" height="32" ')}</div>`;
+    const letterBoxes=letters.map((l,i)=>{
+      const col=i<n1?'rgba(100,181,246,0.9)':'rgba(255,152,0,0.9)';
+      return `<span style="display:inline-block;background:rgba(255,255,255,.07);border:2px solid ${col};padding:2px 4px;margin:1px;font-size:11px;color:${col}">${l}</span>`;
+    }).join('');
+    return `<div style="display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap">${imgHtml}<div>${letterBoxes}</div></div>`;
+  }
+  const parts=p.split('+');
+  return `<span style="color:#64B5F6;font-size:13px;font-weight:900">${(parts[0]||'').toUpperCase()}</span><span style="color:#FFD700;font-size:12px"> + </span><span style="color:#FF9800;font-size:13px;font-weight:900">${(parts[1]||'').toUpperCase()}</span>`;
+}
+
+function updateStreak(){
+  const b=G.battle, el=document.getElementById('quiz-streak');
+  if(b.streak>=3) el.innerHTML='🔥🔥 STREAK x'+b.streak+' — x1.5!';
+  else if(b.streak>=2) el.innerHTML='🔥 STREAK x'+b.streak+' — x1.2!';
+  else if(b.betulQ>0) el.innerHTML='✅ '+b.betulQ+'/'+b.totalQ+' betul';
+  else el.innerHTML='';
+}
+
+function jawab(btn,pilihan){
+  const b=G.battle; if(b.over||b.turn!=='player')return;
+  b.turn='enemy'; b.totalQ++;
+  const q=b.currentQ;
+  const betul=pilihan===q.jawapan;
+  document.querySelectorAll('.pilihan-btn').forEach(el=>{
+    el.disabled=true;
+    const m=el.getAttribute('onclick').match(/jawab\(this,'(.+?)'\)/);
+    if(!m)return;
+    if(m[1]===pilihan) el.classList.add(betul?'betul':'salah');
+    if(!betul&&m[1]===q.jawapan) el.classList.add('betul');
+  });
+  const dEl=document.getElementById('quiz-display');
+  if(betul){
+    b.betulQ++; b.streak++;
+    const bonus=b.streak>=3?1.5:b.streak>=2?1.2:1;
+    const dmg=Math.floor((18+G.player.level*3+Math.random()*10)*bonus);
+    b.enemy.hp=Math.max(0,b.enemy.hp-dmg);
+    setLog('⭐ PANDAI! "'+q.jawapan.toUpperCase()+'" '+(b.streak>=2?'🔥x'+b.streak+'! ':'')+'— serang '+dmg+'!');
+    const sp=document.getElementById('spr-player'),se=document.getElementById('spr-enemy');
+    sp.classList.add('do-atk');
+    if(b.streak>=3) sfxStreak3(); else if(b.streak>=2) sfxStreak2(); else sfxBetul();
+    setTimeout(()=>{sp.classList.remove('do-atk');se.classList.add('do-hurt');sfxAtk();sfxHurt();setTimeout(()=>se.classList.remove('do-hurt'),500)},200);
+    updBar('ehp',b.enemy.hp,b.enemy.maxHp);
+    showAns(dEl,q,'#4CAF50');
+    if(b.enemy.hp<=0){setTimeout(()=>endBattle(true),1300);return;}
+    updateStreak(); setTimeout(newSoalan,1500);
+  } else {
+    b.streak=0;
+    const dmg=Math.floor(12+b.enemy.level*2+Math.random()*8);
+    b.pHp=Math.max(0,b.pHp-dmg);
+    setLog('😔 CUBA LAGI! Jawapan: "'+q.jawapan.toUpperCase()+'" ❌');
+    sfxSalah();
+    const se=document.getElementById('spr-enemy'),sp=document.getElementById('spr-player');
+    se.classList.add('do-eatk');
+    setTimeout(()=>{se.classList.remove('do-eatk');sp.classList.add('do-phurt');sfxHurt();setTimeout(()=>sp.classList.remove('do-phurt'),500)},200);
+    updBar('php',b.pHp,b.pMax);
+    showAns(dEl,q,'#E53935');
+    if(b.pHp<=0){setTimeout(()=>endBattle(false),1300);return;}
+    updateStreak(); setTimeout(newSoalan,1800);
+  }
+}
+
+function showAns(dEl,q,col){
+  if(q.jenis==='batang'){
+    dEl.innerHTML=`
+      <div class="suku-box highlight">${q.pk.s1.toUpperCase()}</div>
+      <div class="suku-plus">+</div>
+      <div class="suku-box highlight">${q.pk.s2.toUpperCase()}</div>
+      <div class="suku-eq">=</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+        <div style="width:52px;height:52px">${getGambar(q.pk.perkataan,'').replace('<svg ','<svg width="52" height="52" ')}</div>
+        <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:${col}">${q.pk.perkataan.toUpperCase()}</div>
+      </div>`;
+  } else {
+    dEl.innerHTML=`
+      <div style="text-align:center">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px">
+          <div style="width:48px;height:48px">${getGambar(q.pk.perkataan,'').replace('<svg ','<svg width="48" height="48" ')}</div>
+          <span style="font-family:'Press Start 2P',monospace;font-size:11px;color:#FFD700">${q.pk.perkataan.toUpperCase()}</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:6px">
+          <div class="suku-box" style="border-color:#64B5F6;color:#64B5F6">${q.pk.s1.toUpperCase()}</div>
+          <div class="suku-plus" style="color:${col}">+</div>
+          <div class="suku-box" style="border-color:#FF9800;color:#FF9800">${q.pk.s2.toUpperCase()}</div>
+        </div>
+      </div>`;
+  }
+}
+
+function pct(a,b){return Math.round(a/b*100)}
+function hpC(a,b){const r=a/b;return r>.5?'hph':r>.25?'hpm':'hpl'}
+
+function setLog(t){
+  const el=document.getElementById('blog');
+  el.textContent=t;
+  if(t.includes('PANDAI')){
+    el.style.background='rgba(0,100,0,0.75)';el.style.color='#A5D6A7';
+    setTimeout(()=>{el.style.background='rgba(0,0,30,0.92)';el.style.color='#E0E0E0';},1400);
+  } else if(t.includes('CUBA LAGI')){
+    el.style.background='rgba(120,0,0,0.75)';el.style.color='#FFCDD2';
+    setTimeout(()=>{el.style.background='rgba(0,0,30,0.92)';el.style.color='#E0E0E0';},1700);
+  } else {
+    el.style.background='rgba(0,0,30,0.92)';el.style.color='#E0E0E0';
+  }
+}
+
+function updBar(w,hp,max){
+  const f=document.getElementById(w+'-fill'),n=document.getElementById(w+'-num');
+  if(f){f.style.width=pct(hp,max)+'%';f.className='hpfill '+hpC(hp,max)}
+  if(n)n.textContent=hp+'/'+max;
+}
+
+function flee(){sfxMenu();G.battle.over=true;setLog('Lari berjaya!');setTimeout(()=>go('s-map'),700);}
+
+function endBattle(won){
+  G.battle.over=true;
+  document.querySelectorAll('.pilihan-btn').forEach(b=>b.disabled=true);
+  const rw=document.getElementById('r-sprite-wrap');
+  const b=G.battle;
+  const scoreText='Betul: '+b.betulQ+'/'+b.totalQ+' soalan';
+  if(won){
+    sfxWin();const xpg=b.stageId*50;G.xp+=xpg;G.caught++;
+    G.player.hp=Math.min(G.player.maxHp,G.player.hp+20);
+    G.player.level=Math.floor(G.xp/100)+1;
+    if(G.unlocked<10&&b.stageId>=G.unlocked){G.unlocked=Math.min(10,b.stageId+1);setTimeout(sfxUnlock,800);}
+    G.stage=Math.min(10,b.stageId+1);
+    if(b.stageId>=10){setTimeout(()=>showTahniah(),800);return;}
+    rw.innerHTML=`<div class="rsp">${mkSvg(b.pkKey,110,110)}</div>`;
+    document.getElementById('r-title').textContent='MENANG!';
+    document.getElementById('r-title').style.color='#81C784';
+    document.getElementById('r-msg').textContent=b.enemy.name+' ditawan! '+scoreText;
+    document.getElementById('r-xp').textContent='+'+xpg+' XP';
+    document.getElementById('r-badge').textContent=b.enemy.name+' Ditangkap!';
+    document.getElementById('r-next').textContent='➜ SETERUSNYA';
+    G.resultNext=()=>go('s-map'); spawnCf();
+  } else {
+    sfxLose();G.player.hp=Math.floor(G.player.maxHp*.6);
+    rw.innerHTML='<div style="font-size:64px;display:block;animation:bounce 1s steps(2) infinite">💀</div>';
+    document.getElementById('r-title').textContent='KALAH!';
+    document.getElementById('r-title').style.color='#EF9A9A';
+    document.getElementById('r-msg').textContent=b.enemy.name+' terlalu kuat! '+scoreText;
+    document.getElementById('r-xp').textContent='+10 XP';G.xp+=10;
+    document.getElementById('r-badge').textContent='Cuba lagi! Baca suku kata betul-betul!';
+    document.getElementById('r-next').textContent='↺ CUBA LAGI';
+    const sid=b.stageId;G.resultNext=()=>enterStage(sid);
+  }
+  setTimeout(()=>go('s-result'),800);
+}
+
+function nextAction(){if(G.resultNext)G.resultNext();}
+
+function spawnCf(){
+  const w=document.getElementById('confetti');w.innerHTML='';
+  ['🌟','⭐','✨','🎉','🎊','💛'].forEach(p=>{
+    for(let j=0;j<3;j++){
+      const e=document.createElement('div');e.className='cfp';e.textContent=p;
+      e.style.left=Math.random()*100+'%';
+      e.style.animationDelay=Math.random()*.6+'s';
+      e.style.animationDuration=(1.5+Math.random())+'s';
+      w.appendChild(e);
+    }
+  });
+}
+
+function showTahniah(){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-tahniah').classList.add('active');
+  document.getElementById('tahniah-score').innerHTML='XP TERKUMPUL: '+G.xp+'<br>POKEMON DITAWAN: '+G.caught+'/10';
+  document.getElementById('tahniah-pokemon').innerHTML='TAHAP SELESAI: 10/10 ✅';
+  const wrap=document.getElementById('confetti-tahniah'); wrap.innerHTML='';
+  const pieces=['🌟','⭐','✨','🎉','🎊','🏆','💛','🎖️','🎀','🌈'];
+  for(let i=0;i<30;i++){
+    const el=document.createElement('div');el.className='cfp';
+    el.textContent=pieces[i%pieces.length];
+    el.style.left=Math.random()*100+'%';
+    el.style.animationDelay=(Math.random()*1.5)+'s';
+    el.style.animationDuration=(2+Math.random()*2)+'s';
+    el.style.fontSize=(14+Math.random()*16)+'px';
+    wrap.appendChild(el);
+  }
+  sfxWin(); setTimeout(()=>{sfxWin();setTimeout(sfxStreak3,400);},600);
+}
+
+function resetGame(){
+  G={stage:1,xp:0,caught:0,soundOn:G.soundOn,
+    player:JSON.parse(JSON.stringify(PLAYER)),
+    stages:JSON.parse(JSON.stringify(STAGES)),
+    unlocked:1,battle:null,resultNext:null};
+  go('s-title');sfxMenu();
+}
+
+window.addEventListener('resize',()=>{
+  if(document.getElementById('s-map').classList.contains('active')){posPin();scrollToStage();}
+});
+['touchstart','mousedown'].forEach(ev=>document.addEventListener(ev,()=>{
+  if(actx&&actx.state==='suspended') actx.resume();
+},{passive:true}));
+
+</script>
+</body>
+</html>
